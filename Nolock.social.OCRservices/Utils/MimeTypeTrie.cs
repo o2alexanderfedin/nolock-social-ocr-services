@@ -2,7 +2,7 @@ namespace Nolock.social.OCRservices.Utils;
 
 public class MimeTypeTrie
 {
-    private class TrieNode
+    private sealed class TrieNode
     {
         public Dictionary<byte, TrieNode> Children { get; } = new();
         public string? MimeType { get; set; }
@@ -12,6 +12,8 @@ public class MimeTypeTrie
 
     public void Add(byte[] signature, string mimeType)
     {
+        ArgumentNullException.ThrowIfNull(signature);
+        ArgumentNullException.ThrowIfNull(mimeType);
         var current = _root;
         foreach (var b in signature)
         {
@@ -33,6 +35,7 @@ public class MimeTypeTrie
 
     public string? Search(byte[] data)
     {
+        ArgumentNullException.ThrowIfNull(data);
         var current = _root;
         string? lastFoundMimeType = null;
         

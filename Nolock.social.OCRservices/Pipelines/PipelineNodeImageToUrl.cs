@@ -1,11 +1,11 @@
-using System.Collections.Immutable;
-using System.Collections.ObjectModel;
+using Microsoft.IO;
 using Nolock.social.OCRservices.Utils;
 
 namespace Nolock.social.OCRservices.Pipelines;
 
 public class PipelineNodeImageToUrl : IPipelineNode<Stream, Uri>
 {
+    private static readonly RecyclableMemoryStreamManager StreamManager = new();
     private static readonly MimeTypeTrie MimeTrie = BuildMimeTrie();
     
     private static MimeTypeTrie BuildMimeTrie()
@@ -19,9 +19,9 @@ public class PipelineNodeImageToUrl : IPipelineNode<Stream, Uri>
         return trie;
     }
 
-    private readonly IPipelineNode<Stream, Uri> _impl = PipelineNodeRelay.Create<Stream, Uri>(async stream =>
+    private readonly PipelineNodeRelay<Stream, Uri> _impl = PipelineNodeRelay.Create<Stream, Uri>(async stream =>
     {
-        using var ms = new MemoryStream();
+        using var ms = StreamManager.GetStream();
         await stream.CopyToAsync(ms);
         var bytes = ms.ToArray();
 
@@ -39,7 +39,9 @@ public class PipelineNodeImageToUrl : IPipelineNode<Stream, Uri>
     {
         var mimeType = MimeTrie.Search(bytes);
         if (mimeType != null)
+        {
             return mimeType;
+        }
         
         var supportedFormats = string.Join(", ", MimeTrie.GetAllMimeTypes());
         throw new NotSupportedException($"Unable to detect MIME type from the provided data. Supported formats: {supportedFormats}");
