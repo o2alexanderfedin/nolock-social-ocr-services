@@ -18,7 +18,8 @@
       "Bash(git flow feature start:*)",
       "Bash(git push:*)",
       "Bash(git flow feature finish:*)",
-      "Bash(git flow release:*)"
+      "Bash(git flow release:*)",
+      "Bash(GIT_MERGE_AUTOEDIT=no git flow release finish -n 1.0.0)"
     ],
     "deny": []
   }
