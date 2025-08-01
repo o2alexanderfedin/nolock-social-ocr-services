@@ -73,12 +73,11 @@ public sealed class MistralOcrApiService : IMistralOcrService
         return await SendRequestAsync(request, cancellationToken);
     }
 
-    public async Task<MistralOcrResult> ProcessImageDataItemAsync((Uri url, string mimeType) dataItem, CancellationToken cancellationToken = default)
+    public async Task<MistralOcrResult> ProcessImageDataItemAsync((string url, string mimeType) dataItem, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(dataItem.url);
-        var dataUrl = dataItem.url.ToString();
+        ArgumentException.ThrowIfNullOrWhiteSpace(dataItem.url);
 
-        if (!dataUrl.StartsWith("data:"))
+        if (!dataItem.url.StartsWith("data:"))
         {
             throw new ArgumentException("Invalid data URL format", nameof(dataItem));
         }
@@ -86,7 +85,7 @@ public sealed class MistralOcrApiService : IMistralOcrService
         var request = new OcrRequest
         {
             Model = _configuration.Model,
-            Document = new ImageUrlChunk { ImageUrl = dataUrl }
+            Document = new ImageUrlChunk { ImageUrl = dataItem.url }
         };
 
         return await SendRequestAsync(request, cancellationToken);
@@ -105,7 +104,7 @@ public sealed class MistralOcrApiService : IMistralOcrService
         var base64 = Convert.ToBase64String(imageBytes);
         var dataUrl = $"data:{mimeType};base64,{base64}";
 
-        return await ProcessImageDataItemAsync((new Uri(dataUrl), mimeType), cancellationToken);
+        return await ProcessImageDataItemAsync((dataUrl, mimeType), cancellationToken);
     }
 
     public async Task<MistralOcrResult> ProcessImageStreamAsync(Stream imageStream, string mimeType, CancellationToken cancellationToken = default)

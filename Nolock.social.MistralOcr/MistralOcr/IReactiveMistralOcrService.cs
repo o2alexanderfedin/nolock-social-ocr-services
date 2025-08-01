@@ -6,9 +6,9 @@ namespace Nolock.social.MistralOcr;
 public interface IReactiveMistralOcrService
 {
     /// <summary>
-    /// Process a stream of image data URLs (as Uri objects) and return OCR results
+    /// Process a stream of image data URLs and return OCR results
     /// </summary>
-    IObservable<MistralOcrResult> ProcessImageDataItems(IObservable<(Uri url, string mimeType)> dataItems);
+    IObservable<MistralOcrResult> ProcessImageDataItems(IObservable<(string url, string mimeType)> dataItems);
 
     /// <summary>
     /// Process a stream of image bytes and return OCR results

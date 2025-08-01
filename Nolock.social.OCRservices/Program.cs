@@ -35,7 +35,7 @@ var ocrApi = app.MapGroup("/ocr");
 ocrApi.MapPut("/sync", (string type) => Results.Ok(type));
 
 // Mistral OCR endpoint using reactive implementation with stream input
-ocrApi.MapPost("/mistral", async (
+ocrApi.MapPost("/async", async (
     IReactiveMistralOcrService reactiveOcrService,
     [FromBody] Stream image) =>
 {

@@ -50,7 +50,7 @@ public class ImageTransformationIntegrationTests : TestBase
         
         // Process through OCR
         var ocrResult = await Fixture.MistralOcrService.ProcessImageDataItemAsync(
-            (new Uri(transformedUrl), "image/jpeg"));
+            (transformedUrl, "image/jpeg"));
         
         ocrResult.Should().NotBeNull();
         ocrResult.ModelUsed.Should().StartWith("mistral-ocr");

@@ -3,7 +3,7 @@ using Nolock.social.OCRservices.Utils;
 
 namespace Nolock.social.OCRservices.Pipelines;
 
-public class PipelineNodeImageToUrl : IPipelineNode<Stream, (Uri url, string mimeType)>
+public class PipelineNodeImageToUrl : IPipelineNode<Stream, (string url, string mimeType)>
 {
     private static readonly RecyclableMemoryStreamManager StreamManager = new();
     private static readonly MimeTypeTrie MimeTrie = BuildMimeTrie();
@@ -19,7 +19,7 @@ public class PipelineNodeImageToUrl : IPipelineNode<Stream, (Uri url, string mim
         return trie;
     }
 
-    private readonly PipelineNodeRelay<Stream, (Uri url, string mimeType)> _impl = PipelineNodeRelay.Create<Stream, (Uri url, string mimeType)>(async stream =>
+    private readonly PipelineNodeRelay<Stream, (string url, string mimeType)> _impl = PipelineNodeRelay.Create<Stream, (string url, string mimeType)>(async stream =>
     {
         await using var ms = StreamManager.GetStream();
         await stream.CopyToAsync(ms);
@@ -29,10 +29,10 @@ public class PipelineNodeImageToUrl : IPipelineNode<Stream, (Uri url, string mim
         var base64 = Convert.ToBase64String(bytes);
         var dataUrl = $"data:{mimeType};base64,{base64}";
 
-        return (new Uri(dataUrl), mimeType);
+        return (dataUrl, mimeType);
     });
 
-    public ValueTask<(Uri url, string mimeType)> ProcessAsync(Stream input)
+    public ValueTask<(string url, string mimeType)> ProcessAsync(Stream input)
         => _impl.ProcessAsync(input);
 
     private static string DetectMimeType(byte[] bytes)
