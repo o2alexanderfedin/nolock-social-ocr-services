@@ -41,19 +41,17 @@ public static class ImageTransformExtensions
     /// <param name="imageUrls">Observable stream of image URLs (can be regular URLs or data URLs)</param>
     /// <param name="ocrService">OCR service instance</param>
     /// <param name="transformer">Image transformer instance</param>
-    /// <param name="prompt">OCR prompt</param>
     /// <returns>Observable stream of OCR results</returns>
     public static IObservable<MistralOcrResult> ProcessImagesWithTransform(
         this IObservable<string> imageUrls,
         IReactiveMistralOcrService ocrService,
-        IImageUrlToDataUrlTransformer transformer,
-        string? prompt = null)
+        IImageUrlToDataUrlTransformer transformer)
     {
         return imageUrls
             .ToDataUrlsWithErrors(transformer)
             .Where(result => result.Success && !string.IsNullOrEmpty(result.DataUrl))
             .Select(result => (new Uri(result.DataUrl!), result.DetectedMimeType ?? "application/octet-stream"))
-            .SelectMany(dataItem => ocrService.ProcessImageDataItems(Observable.Return(dataItem), prompt));
+            .SelectMany(dataItem => ocrService.ProcessImageDataItems(Observable.Return(dataItem)));
     }
 
     /// <summary>
@@ -62,13 +60,11 @@ public static class ImageTransformExtensions
     /// <param name="imageUrls">Observable stream of image URLs</param>
     /// <param name="ocrService">OCR service instance</param>
     /// <param name="transformer">Image transformer instance</param>
-    /// <param name="prompt">OCR prompt</param>
     /// <returns>Observable stream of OCR processing results with transformation info</returns>
     public static IObservable<ImageOcrProcessingResult> ProcessImagesWithTransformAndErrors(
         this IObservable<string> imageUrls,
         IReactiveMistralOcrService ocrService,
-        IImageUrlToDataUrlTransformer transformer,
-        string? prompt = null)
+        IImageUrlToDataUrlTransformer transformer)
     {
         return imageUrls
             .ToDataUrlsWithErrors(transformer)
@@ -86,7 +82,7 @@ public static class ImageTransformExtensions
                 }
 
                 // Process through OCR
-                return ocrService.ProcessImageDataItems(Observable.Return((new Uri(transformResult.DataUrl), transformResult.DetectedMimeType ?? "application/octet-stream")), prompt)
+                return ocrService.ProcessImageDataItems(Observable.Return((new Uri(transformResult.DataUrl), transformResult.DetectedMimeType ?? "application/octet-stream")))
                     .Select(ocrResult => new ImageOcrProcessingResult
                     {
                         OriginalUrl = transformResult.OriginalUrl,

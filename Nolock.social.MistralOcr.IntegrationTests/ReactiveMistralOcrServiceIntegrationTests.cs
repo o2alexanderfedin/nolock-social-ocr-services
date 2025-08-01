@@ -31,7 +31,7 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
         var dataItems = Observable.Return((new Uri(dataUrl), "image/jpeg"));
         
         // Act
-        var results = await _reactiveService.ProcessImageDataItems(dataItems, "Extract text")
+        var results = await _reactiveService.ProcessImageDataItems(dataItems)
             .ToList();
         
         // Assert
@@ -49,7 +49,7 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
         
         // Act
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        var results = await _reactiveService.ProcessImageDataItems(dataItems, "Extract text")
+        var results = await _reactiveService.ProcessImageDataItems(dataItems)
             .ToList();
         stopwatch.Stop();
         
@@ -78,7 +78,7 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
         }.ToObservable();
         
         // Act
-        var results = await _reactiveService.ProcessImageDataItems(dataItems, "Extract text")
+        var results = await _reactiveService.ProcessImageDataItems(dataItems)
             .ToList();
         
         // Assert
@@ -98,7 +98,7 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
         var images = Observable.Return((imageBytes, "image/jpeg"));
         
         // Act
-        var results = await _reactiveService.ProcessImageBytes(images, "Extract text")
+        var results = await _reactiveService.ProcessImageBytes(images)
             .ToList();
         
         // Assert
@@ -114,7 +114,7 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
         var streams = Observable.Return((stream, "image/jpeg"));
         
         // Act
-        var results = await _reactiveService.ProcessImageStreams(streams, "Extract text")
+        var results = await _reactiveService.ProcessImageStreams(streams)
             .ToList();
         
         // Assert
@@ -150,7 +150,7 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
         .ToObservable();
         
         // Act
-        var results = await _reactiveService.ProcessImageDataItems(dataItems, "Extract text")
+        var results = await _reactiveService.ProcessImageDataItems(dataItems)
             .ToList();
         
         // Assert
@@ -167,11 +167,11 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
         
         // Act
         var generalResult = await _reactiveService
-            .ProcessImageDataItems(Observable.Return(dataItem), "Extract all text")
+            .ProcessImageDataItems(Observable.Return(dataItem))
             .FirstAsync();
             
         var specificResult = await _reactiveService
-            .ProcessImageDataItems(Observable.Return(dataItem), "Extract only the total amount")
+            .ProcessImageDataItems(Observable.Return(dataItem))
             .FirstAsync();
         
         // Assert

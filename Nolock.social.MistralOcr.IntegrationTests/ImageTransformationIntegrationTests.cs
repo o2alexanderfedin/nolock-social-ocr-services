@@ -50,8 +50,7 @@ public class ImageTransformationIntegrationTests : TestBase
         
         // Process through OCR
         var ocrResult = await Fixture.MistralOcrService.ProcessImageDataItemAsync(
-            (new Uri(transformedUrl), "image/jpeg"), 
-            "Extract any text from this image");
+            (new Uri(transformedUrl), "image/jpeg"));
         
         ocrResult.Should().NotBeNull();
         ocrResult.ModelUsed.Should().StartWith("mistral-ocr");
@@ -73,8 +72,7 @@ public class ImageTransformationIntegrationTests : TestBase
             .ToObservable()
             .ProcessImagesWithTransform(
                 _reactiveOcrService,
-                _transformer,
-                "Extract any visible text")
+                _transformer)
             .ToList();
 
         // Assert
@@ -127,8 +125,7 @@ public class ImageTransformationIntegrationTests : TestBase
             .ToObservable()
             .ProcessImagesWithTransform(
                 _reactiveOcrService,
-                _transformer,
-                "Extract text from image")
+                _transformer)
             .ToList();
 
         // Assert
@@ -182,8 +179,7 @@ public class ImageTransformationIntegrationTests : TestBase
             .ToObservable()
             .ProcessImagesWithTransform(
                 _reactiveOcrService,
-                _transformer,
-                "Extract text from image")
+                _transformer)
             .ToList();
 
         // Assertions

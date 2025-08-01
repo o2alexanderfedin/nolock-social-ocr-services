@@ -96,9 +96,9 @@ public sealed class ReactiveMistralOcrPipeline : IDisposable
 
             var result = request.InputType switch
             {
-                OcrInputType.Url => await _ocrService.ProcessImageAsync(request.Input, request.Prompt),
-                OcrInputType.DataUrl => await _ocrService.ProcessImageDataItemAsync((new Uri(request.Input), request.MimeType ?? "application/octet-stream"), request.Prompt),
-                OcrInputType.Base64 => await ProcessBase64Image(request.Input, request.MimeType!, request.Prompt),
+                OcrInputType.Url => await _ocrService.ProcessImageAsync(request.Input),
+                OcrInputType.DataUrl => await _ocrService.ProcessImageDataItemAsync((new Uri(request.Input), request.MimeType ?? "application/octet-stream")),
+                OcrInputType.Base64 => await ProcessBase64Image(request.Input, request.MimeType!),
                 _ => throw new NotSupportedException($"Input type {request.InputType} is not supported")
             };
 
@@ -124,10 +124,10 @@ public sealed class ReactiveMistralOcrPipeline : IDisposable
         }
     }
 
-    private async Task<MistralOcrResult> ProcessBase64Image(string base64, string mimeType, string? prompt)
+    private async Task<MistralOcrResult> ProcessBase64Image(string base64, string mimeType)
     {
         var imageBytes = Convert.FromBase64String(base64);
-        return await _ocrService.ProcessImageBytesAsync(imageBytes, mimeType, prompt);
+        return await _ocrService.ProcessImageBytesAsync(imageBytes, mimeType);
     }
 
     private IObservable<OcrResult> HandleError(ReactiveOcrRequest request, Exception exception)

@@ -37,8 +37,7 @@ ocrApi.MapPut("/sync", (string type) => Results.Ok(type));
 // Mistral OCR endpoint using reactive implementation with stream input
 ocrApi.MapPost("/mistral", async (
     IReactiveMistralOcrService reactiveOcrService,
-    [FromBody] Stream image,
-    string? prompt = null) =>
+    [FromBody] Stream image) =>
 {
     try
     {
@@ -49,7 +48,7 @@ ocrApi.MapPost("/mistral", async (
         // Process using reactive service with data URL
         var dataItemsObservable = Observable.Return(dataItem);
         var result = await reactiveOcrService
-            .ProcessImageDataItems(dataItemsObservable, prompt)
+            .ProcessImageDataItems(dataItemsObservable)
             .FirstOrDefaultAsync();
         
         if (result == null)
