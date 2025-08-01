@@ -50,8 +50,10 @@ public static class ImageTransformExtensions
         string? prompt = null)
     {
         return imageUrls
-            .ToDataUrls(transformer)
-            .SelectMany(dataUrl => ocrService.ProcessImageDataUrls(Observable.Return(dataUrl), prompt));
+            .ToDataUrlsWithErrors(transformer)
+            .Where(result => result.Success && !string.IsNullOrEmpty(result.DataUrl))
+            .Select(result => (new Uri(result.DataUrl!), result.DetectedMimeType ?? "application/octet-stream"))
+            .SelectMany(dataItem => ocrService.ProcessImageDataItems(Observable.Return(dataItem), prompt));
     }
 
     /// <summary>
@@ -84,7 +86,7 @@ public static class ImageTransformExtensions
                 }
 
                 // Process through OCR
-                return ocrService.ProcessImageDataUrls(Observable.Return(transformResult.DataUrl), prompt)
+                return ocrService.ProcessImageDataItems(Observable.Return((new Uri(transformResult.DataUrl), transformResult.DetectedMimeType ?? "application/octet-stream")), prompt)
                     .Select(ocrResult => new ImageOcrProcessingResult
                     {
                         OriginalUrl = transformResult.OriginalUrl,

@@ -49,8 +49,8 @@ public class ImageTransformationIntegrationTests : TestBase
         transformedUrl.Should().Be(dataUrl);
         
         // Process through OCR
-        var ocrResult = await Fixture.MistralOcrService.ProcessImageDataUrlAsync(
-            transformedUrl, 
+        var ocrResult = await Fixture.MistralOcrService.ProcessImageDataItemAsync(
+            (new Uri(transformedUrl), "image/jpeg"), 
             "Extract any text from this image");
         
         ocrResult.Should().NotBeNull();

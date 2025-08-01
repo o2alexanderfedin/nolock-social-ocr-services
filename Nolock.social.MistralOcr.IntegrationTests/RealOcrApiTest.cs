@@ -23,8 +23,8 @@ public class RealOcrApiTest : TestBase
         
         // Act
         _output.WriteLine("Calling Mistral OCR API with receipt image...");
-        var result = await Fixture.MistralOcrService.ProcessImageDataUrlAsync(
-            dataUrl, 
+        var result = await Fixture.MistralOcrService.ProcessImageDataItemAsync(
+            (new Uri(dataUrl), "image/jpeg"), 
             "Extract all text from this receipt. Include store name, items, prices, and total.");
 
         // Assert

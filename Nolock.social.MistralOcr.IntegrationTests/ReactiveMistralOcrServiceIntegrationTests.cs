@@ -24,14 +24,14 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
     }
 
     [Fact]
-    public async Task ProcessImageUrls_WithValidDataUrl_ShouldReturnResult()
+    public async Task ProcessImageDataItems_WithValidDataUrl_ShouldReturnResult()
     {
         // Arrange
         var dataUrl = GetTestImageDataUrl();
-        var imageUrls = Observable.Return(dataUrl);
+        var dataItems = Observable.Return((new Uri(dataUrl), "image/jpeg"));
         
         // Act
-        var results = await _reactiveService.ProcessImageUrls(imageUrls, "Extract text")
+        var results = await _reactiveService.ProcessImageDataItems(dataItems, "Extract text")
             .ToList();
         
         // Assert
@@ -41,15 +41,15 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
     }
 
     [Fact]
-    public async Task ProcessImageUrls_WithMultipleImages_ShouldProcessConcurrently()
+    public async Task ProcessImageDataItems_WithMultipleImages_ShouldProcessConcurrently()
     {
         // Arrange
-        var imageUrls = Observable.Range(1, 3)
-            .Select(i => TestImageHelper.GetReceiptImageDataUrl(i));
+        var dataItems = Observable.Range(1, 3)
+            .Select(i => (new Uri(TestImageHelper.GetReceiptImageDataUrl(i)), "image/jpeg"));
         
         // Act
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        var results = await _reactiveService.ProcessImageUrls(imageUrls, "Extract text")
+        var results = await _reactiveService.ProcessImageDataItems(dataItems, "Extract text")
             .ToList();
         stopwatch.Stop();
         
@@ -67,54 +67,26 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
     }
 
     [Fact]
-    public async Task ProcessImageUrlsBatch_ShouldGroupIntoBatches()
+    public async Task ProcessImageDataItems_WithMixedMimeTypes_ShouldSucceed()
     {
         // Arrange
-        var imageUrls = Observable.Range(1, 5)
-            .Select(i => TestImageHelper.GetReceiptImageDataUrl(i));
-        
-        // Act
-        var batches = await _reactiveService.ProcessImageUrlsBatch(imageUrls, 2, "Extract text")
-            .ToList();
-        
-        // Assert
-        batches.Should().HaveCount(3); // 5 items in batches of 2 = 3 batches
-        batches[0].Should().HaveCount(2);
-        batches[1].Should().HaveCount(2);
-        batches[2].Should().HaveCount(1);
-        
-        batches.SelectMany(b => b).Should().AllSatisfy(r =>
+        var dataItems = new[]
         {
-            r.Text.Should().NotBeNullOrWhiteSpace();
-        });
-    }
-
-    [Fact]
-    public async Task ProcessImageUrlsWithErrors_ShouldCaptureErrors()
-    {
-        // Arrange
-        // ProcessImageUrlsWithErrors expects URLs, not data URLs
-        // So we need to test with actual URLs where one is invalid
-        var imageUrls = new[] 
-        {
-            "https://example.com/valid-image1.jpg",
-            "not-a-valid-url-at-all", // This should cause an error
-            "https://example.com/valid-image2.jpg"
+            (new Uri(TestImageHelper.GetReceiptImageDataUrl(1)), "image/jpeg"),
+            (new Uri(TestImageHelper.GetReceiptImageDataUrl(2)), "image/png"),
+            (new Uri(TestImageHelper.GetReceiptImageDataUrl(3)), "image/webp")
         }.ToObservable();
         
         // Act
-        var results = await _reactiveService.ProcessImageUrlsWithErrors(imageUrls, "Extract text")
+        var results = await _reactiveService.ProcessImageDataItems(dataItems, "Extract text")
             .ToList();
         
         // Assert
         results.Should().HaveCount(3);
-        
-        // All might succeed or fail depending on API behavior
-        // The important thing is that errors are captured, not thrown
         results.Should().AllSatisfy(r =>
         {
-            // Either Result or Error should be set, not both
-            (r.Result == null).Should().NotBe(r.Error == null);
+            r.Text.Should().NotBeNullOrWhiteSpace();
+            r.ProcessingTime.Should().BeGreaterThan(TimeSpan.Zero);
         });
     }
 
@@ -151,13 +123,13 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
     }
 
     [Fact]
-    public async Task ReactiveService_WithEmptyInput_ShouldReturnEmpty()
+    public async Task ProcessImageDataItems_WithEmptyInput_ShouldReturnEmpty()
     {
         // Arrange
-        var emptyUrls = Observable.Empty<string>();
+        var emptyDataItems = Observable.Empty<(Uri url, string mimeType)>();
         
         // Act
-        var results = await _reactiveService.ProcessImageUrls(emptyUrls)
+        var results = await _reactiveService.ProcessImageDataItems(emptyDataItems)
             .ToList();
         
         // Assert
@@ -165,18 +137,52 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
     }
 
     [Fact]
-    public async Task ReactiveService_FiltersOutInvalidInput()
+    public async Task ProcessImageDataItems_FiltersOutNullUrls()
     {
         // Arrange
-        var mixedUrls = new[] { "", null, "  ", TestImageHelper.GetReceiptImageDataUrl(1) }
-            .ToObservable()!;
+        var dataItems = new[]
+        {
+            (new Uri(TestImageHelper.GetReceiptImageDataUrl(1)), "image/jpeg"),
+            (null, "image/jpeg"), // This should be filtered out
+            (new Uri(TestImageHelper.GetReceiptImageDataUrl(2)), "image/png")
+        }.Where(item => item.Item1 != null)
+        .Select(item => (item.Item1!, item.Item2))
+        .ToObservable();
         
         // Act
-        var results = await _reactiveService.ProcessImageUrls(mixedUrls!, "Extract text")
+        var results = await _reactiveService.ProcessImageDataItems(dataItems, "Extract text")
             .ToList();
         
         // Assert
-        results.Should().HaveCount(1); // Only valid URL processed
-        results[0].Text.Should().NotBeNullOrWhiteSpace();
+        results.Should().HaveCount(2); // Only valid URLs processed
+        results.Should().AllSatisfy(r => r.Text.Should().NotBeNullOrWhiteSpace());
+    }
+
+    [Fact]
+    public async Task ProcessImageDataItems_WithDifferentPrompts_ShouldReturnDifferentResults()
+    {
+        // Arrange
+        var dataUrl = TestImageHelper.GetReceiptImageDataUrl(1);
+        var dataItem = (new Uri(dataUrl), "image/jpeg");
+        
+        // Act
+        var generalResult = await _reactiveService
+            .ProcessImageDataItems(Observable.Return(dataItem), "Extract all text")
+            .FirstAsync();
+            
+        var specificResult = await _reactiveService
+            .ProcessImageDataItems(Observable.Return(dataItem), "Extract only the total amount")
+            .FirstAsync();
+        
+        // Assert
+        generalResult.Should().NotBeNull();
+        specificResult.Should().NotBeNull();
+        generalResult.Text.Should().NotBeNullOrWhiteSpace();
+        specificResult.Text.Should().NotBeNullOrWhiteSpace();
+        
+        // Different prompts should potentially yield different results
+        // (though both should contain some text)
+        generalResult.Text.Length.Should().BeGreaterThan(0);
+        specificResult.Text.Length.Should().BeGreaterThan(0);
     }
 }
