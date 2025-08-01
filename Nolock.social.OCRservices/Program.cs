@@ -1,13 +1,11 @@
-using System.Reactive.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Nolock.social.MistralOcr;
 using Nolock.social.MistralOcr.Extensions;
 using Nolock.social.OCRservices;
+using Nolock.social.OCRservices.Services;
 using Nolock.social.CloudflareAI;
-using Nolock.social.CloudflareAI.JsonExtraction.Models;
 using Nolock.social.CloudflareAI.JsonExtraction.Services;
 using Nolock.social.OCRservices.Core.Models;
-using Nolock.social.OCRservices.Core.Pipelines;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,7 +56,10 @@ builder.Services.AddWorkersAI(options =>
 // Add OCR extraction service
 builder.Services.AddScoped<OcrExtractionService>();
 
-// No longer need image transformation services since we're using stream input
+// Add refactored services following SOLID principles
+builder.Services.AddScoped<IOcrRequestHandler, OcrRequestHandler>();
+builder.Services.AddScoped<IImageToDataUrlConverter, ImageToDataUrlConverter>();
+builder.Services.AddScoped<IDocumentTypeValidator, DocumentTypeValidator>();
 
 var app = builder.Build();
 
@@ -71,68 +72,14 @@ app.UseSwaggerUI(options =>
 var ocrApi = app.MapGroup("/ocr")
     .WithTags("OCR Operations");
 
-// Mistral OCR endpoint using reactive implementation with stream input
+// Mistral OCR endpoint using refactored service with separated concerns
 ocrApi.MapPost("/async", async (
-    IReactiveMistralOcrService reactiveOcrService,
-    OcrExtractionService ocrExtractionService,
+    IOcrRequestHandler ocrHandler,
     HttpContext context,
     [FromBody] Stream image) =>
 {
-    try
-    {
-        // Parse document type from query string
-        var documentTypeString = context.Request.Query["documentType"].FirstOrDefault();
-        if (string.IsNullOrEmpty(documentTypeString))
-        {
-            return Results.BadRequest("Document type is required. Valid values: check, receipt");
-        }
-
-        // Convert string to DocumentType enum
-        if (!Enum.TryParse<DocumentType>(documentTypeString, true, out var documentType))
-        {
-            return Results.BadRequest($"Invalid document type: {documentTypeString}. Valid values: check, receipt");
-        }
-
-        // First pipeline step: convert stream to data URL
-        var imageToUrlPipeline = new PipelineNodeImageToUrl();
-        var dataItem = await imageToUrlPipeline.ProcessAsync(image).ConfigureAwait(false);
-
-        // Process using reactive service with data URL to get OCR text
-        var dataItemsObservable = Observable.Return(dataItem);
-        var ocrResult = await reactiveOcrService
-            .ProcessImageDataItems(dataItemsObservable)
-            .FirstOrDefaultAsync();
-        
-        if (ocrResult == null || string.IsNullOrWhiteSpace(ocrResult.Text))
-        {
-            return Results.Problem("Failed to extract text from image");
-        }
-
-        // Extract structured data based on document type
-        var extractionRequest = new OcrExtractionRequest
-        {
-            DocumentType = documentType,
-            Content = ocrResult.Text,
-            IsImage = false
-        };
-
-        var extractionResponse = await ocrExtractionService.ProcessExtractionRequestAsync(extractionRequest).ConfigureAwait(false);
-        
-        return !extractionResponse.Success
-            ? Results.Problem($"Failed to extract {documentType} data: {extractionResponse.Error}")
-            : Results.Ok(new
-            {
-                documentType = extractionResponse.DocumentType.ToString().ToLower(),
-                ocrText = ocrResult.Text,
-                extractedData = extractionResponse.Data,
-                confidence = extractionResponse.Confidence,
-                processingTimeMs = extractionResponse.ProcessingTimeMs
-            });
-    }
-    catch (Exception ex)
-    {
-        return Results.Problem(ex.Message);
-    }
+    var documentTypeString = context.Request.Query["documentType"].FirstOrDefault();
+    return await ocrHandler.HandleAsync(image, documentTypeString).ConfigureAwait(false);
 })
 .WithName("ProcessOcrAsync")
 .WithSummary("Process image with OCR and extract structured data")

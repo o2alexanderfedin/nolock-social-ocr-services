@@ -31,4 +31,14 @@ public sealed class OcrAsyncResponse
     /// Total processing time in milliseconds
     /// </summary>
     public long ProcessingTimeMs { get; set; }
+    
+    /// <summary>
+    /// The OCR model used for text extraction
+    /// </summary>
+    public string? ModelUsed { get; set; }
+    
+    /// <summary>
+    /// Total tokens consumed during processing
+    /// </summary>
+    public int? TotalTokens { get; set; }
 }
