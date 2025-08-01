@@ -1,26 +1,29 @@
-using System.Net;
 // ReSharper disable UnusedType.Global
 // ReSharper disable UnusedMember.Global
 
 namespace Nolock.social.OCRservices.Pipelines;
 
-public sealed class PipelineNodeRelay<TIn, TOut>(Func<TIn, ValueTask<TOut>> process)
-    : IPipelineNode<TIn, TOut>
+public sealed class PipelineNodeRelay<TIn, TOut> : IPipelineNode<TIn, TOut>
 {
+    private readonly Func<TIn, ValueTask<TOut>> _process;
+
+    public PipelineNodeRelay(Func<TIn, ValueTask<TOut>> process)
+    {
+        ArgumentNullException.ThrowIfNull(process);
+        _process = process;
+    }
+
     public ValueTask<TOut> ProcessAsync(TIn input)
-        => process?.Invoke(input) ?? throw new ArgumentNullException(nameof(process))
-        {
-            HelpLink = null,
-            HResult = (int)HttpStatusCode.ExpectationFailed,
-            Source = $"{GetType().FullName}.{nameof(ProcessAsync)}"
-        };
+        => _process(input);
     
     public static implicit operator PipelineNodeRelay<TIn, TOut>(Func<TIn, ValueTask<TOut>> process)
+        => new(process);
+    
+    public static PipelineNodeRelay<TIn, TOut> FromFunc(Func<TIn, ValueTask<TOut>> process)
         => new(process);
 }
 
 public static class PipelineNodeRelay
 {
-    public static IPipelineNode<TIn, TOut> Create<TIn, TOut>(Func<TIn, ValueTask<TOut>> process)
-        => new PipelineNodeRelay<TIn, TOut>(process);
+    public static PipelineNodeRelay<TIn, TOut> Create<TIn, TOut>(Func<TIn, ValueTask<TOut>> process) => new(process);
 }
