@@ -97,7 +97,7 @@ public sealed class ReactiveMistralOcrPipeline : IDisposable
             var result = request.InputType switch
             {
                 OcrInputType.Url => await _ocrService.ProcessImageAsync(request.Input, request.Prompt),
-                OcrInputType.DataUrl => await _ocrService.ProcessImageDataUrlAsync(request.Input, request.Prompt),
+                OcrInputType.DataUrl => await _ocrService.ProcessImageDataItemAsync((new Uri(request.Input), request.MimeType ?? "application/octet-stream"), request.Prompt),
                 OcrInputType.Base64 => await ProcessBase64Image(request.Input, request.MimeType!, request.Prompt),
                 _ => throw new NotSupportedException($"Input type {request.InputType} is not supported")
             };

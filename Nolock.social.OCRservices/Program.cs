@@ -44,13 +44,12 @@ ocrApi.MapPost("/mistral", async (
     {
         // First pipeline step: convert stream to data URL
         var imageToUrlPipeline = new PipelineNodeImageToUrl();
-        var dataUrlUri = await imageToUrlPipeline.ProcessAsync(image);
-        var dataUrl = dataUrlUri.ToString();
-        
+        var dataItem = await imageToUrlPipeline.ProcessAsync(image);
+
         // Process using reactive service with data URL
-        var dataUrlObservable = Observable.Return(dataUrl);
+        var dataItemsObservable = Observable.Return(dataItem);
         var result = await reactiveOcrService
-            .ProcessImageDataUrls(dataUrlObservable, prompt)
+            .ProcessImageDataItems(dataItemsObservable, prompt)
             .FirstOrDefaultAsync();
         
         if (result == null)

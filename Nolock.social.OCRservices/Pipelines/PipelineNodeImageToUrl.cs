@@ -3,7 +3,7 @@ using Nolock.social.OCRservices.Utils;
 
 namespace Nolock.social.OCRservices.Pipelines;
 
-public class PipelineNodeImageToUrl : IPipelineNode<Stream, Uri>
+public class PipelineNodeImageToUrl : IPipelineNode<Stream, (Uri url, string mimeType)>
 {
     private static readonly RecyclableMemoryStreamManager StreamManager = new();
     private static readonly MimeTypeTrie MimeTrie = BuildMimeTrie();
@@ -19,20 +19,20 @@ public class PipelineNodeImageToUrl : IPipelineNode<Stream, Uri>
         return trie;
     }
 
-    private readonly PipelineNodeRelay<Stream, Uri> _impl = PipelineNodeRelay.Create<Stream, Uri>(async stream =>
+    private readonly PipelineNodeRelay<Stream, (Uri url, string mimeType)> _impl = PipelineNodeRelay.Create<Stream, (Uri url, string mimeType)>(async stream =>
     {
         await using var ms = StreamManager.GetStream();
         await stream.CopyToAsync(ms);
         var bytes = ms.ToArray();
 
-        var mime = DetectMimeType(bytes);
+        var mimeType = DetectMimeType(bytes);
         var base64 = Convert.ToBase64String(bytes);
-        var dataUrl = $"data:{mime};base64,{base64}";
+        var dataUrl = $"data:{mimeType};base64,{base64}";
 
-        return new Uri(dataUrl);
+        return (new Uri(dataUrl), mimeType);
     });
 
-    public ValueTask<Uri> ProcessAsync(Stream input)
+    public ValueTask<(Uri url, string mimeType)> ProcessAsync(Stream input)
         => _impl.ProcessAsync(input);
 
     private static string DetectMimeType(byte[] bytes)

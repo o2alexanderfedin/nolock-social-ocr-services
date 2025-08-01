@@ -10,7 +10,7 @@ public interface IMistralOcrService
     /// <summary>
     /// Performs OCR on an image from a base64 data URL
     /// </summary>
-    Task<MistralOcrResult> ProcessImageDataUrlAsync(string dataUrl, string? prompt = null, CancellationToken cancellationToken = default);
+    Task<MistralOcrResult> ProcessImageDataItemAsync((Uri url, string mimeType) dataItem, string? prompt = null, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Performs OCR on an image from a byte array

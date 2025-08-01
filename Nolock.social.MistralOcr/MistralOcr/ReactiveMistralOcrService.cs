@@ -40,37 +40,18 @@ public sealed class ReactiveMistralOcrService : IReactiveMistralOcrService, IDis
         _retryDelay = retryDelay ?? TimeSpan.FromSeconds(1);
     }
 
-    public IObservable<MistralOcrResult> ProcessImageUrls(IObservable<string> imageUrls, string? prompt = null)
+    public IObservable<MistralOcrResult> ProcessImageDataItems(IObservable<(Uri url, string mimeType)> dataItems, string? prompt = null)
     {
-        return imageUrls
-            .Where(url => !string.IsNullOrWhiteSpace(url))
-            .Select((url, index) => Observable.Defer(() =>
-                Observable.FromAsync(ct => _ocrService.ProcessImageAsync(url, prompt, ct))
-                    .Do(_ => _logger.LogDebug("Successfully processed image {Index}: {Url}", index, url))
+        return dataItems
+            .Where(dataItem => dataItem.url != null)
+            .Select((dataItem, index) => Observable.Defer(() =>
+                Observable.FromAsync(ct => _ocrService.ProcessImageDataItemAsync(dataItem, prompt, ct))
+                    .Do(_ => _logger.LogDebug("Successfully processed data URL {Index} with MIME type {MimeType}", index, dataItem.mimeType))
                     .Retry(_retryCount, _retryDelay, _scheduler)
                     .Catch<MistralOcrResult, Exception>(ex =>
                     {
-                        _logger.LogError(ex, "Failed to process image {Index}: {Url} after {RetryCount} retries",
-                            index, url, _retryCount);
-                        return Observable.Return(MistralOcrResult.Empty);
-                    })))
-            .Merge(_maxConcurrency)
-            .ObserveOn(_scheduler)
-            .TakeUntil(_dispose);
-    }
-
-    public IObservable<MistralOcrResult> ProcessImageDataUrls(IObservable<string> dataUrls, string? prompt = null)
-    {
-        return dataUrls
-            .Where(dataUrl => !string.IsNullOrWhiteSpace(dataUrl))
-            .Select((dataUrl, index) => Observable.Defer(() =>
-                Observable.FromAsync(ct => _ocrService.ProcessImageDataUrlAsync(dataUrl, prompt, ct))
-                    .Do(_ => _logger.LogDebug("Successfully processed data URL {Index}", index))
-                    .Retry(_retryCount, _retryDelay, _scheduler)
-                    .Catch<MistralOcrResult, Exception>(ex =>
-                    {
-                        _logger.LogError(ex, "Failed to process data URL {Index} after {RetryCount} retries",
-                            index, _retryCount);
+                        _logger.LogError(ex, "Failed to process data URL {Index} with MIME type {MimeType} after {RetryCount} retries",
+                            index, dataItem.mimeType, _retryCount);
                         return Observable.Return(MistralOcrResult.Empty);
                     })))
             .Merge(_maxConcurrency)
@@ -115,53 +96,6 @@ public sealed class ReactiveMistralOcrService : IReactiveMistralOcrService, IDis
                             index, _retryCount);
                         return Observable.Return(MistralOcrResult.Empty);
                     })))
-            .Merge(_maxConcurrency)
-            .ObserveOn(_scheduler)
-            .TakeUntil(_dispose);
-    }
-
-    public IObservable<IList<MistralOcrResult>> ProcessImageUrlsBatch(
-        IObservable<string> imageUrls,
-        int batchSize,
-        string? prompt = null)
-    {
-        return imageUrls
-            .Where(url => !string.IsNullOrWhiteSpace(url))
-            .Buffer(batchSize)
-            .Where(batch => batch.Count > 0)
-            .Select(batch =>
-            {
-                _logger.LogInformation("Processing batch of {Count} images", batch.Count);
-
-                return batch
-                    .ToObservable()
-                    .SelectMany(url => Observable.FromAsync(ct =>
-                        _ocrService.ProcessImageAsync(url, prompt, ct))
-                        .Retry(_retryCount, _retryDelay, _scheduler)
-                        .Catch<MistralOcrResult, Exception>(ex =>
-                        {
-                            _logger.LogError(ex, "Failed to process {Url} in batch", url);
-                            return Observable.Return(MistralOcrResult.Empty);
-                        }))
-                    .ToList()
-                    .Do(results => _logger.LogInformation("Completed batch with {Count} results", results.Count));
-            })
-            .Merge(1) // Process batches sequentially
-            .ObserveOn(_scheduler)
-            .TakeUntil(_dispose);
-    }
-
-    public IObservable<(string ImageUrl, MistralOcrResult? Result, Exception? Error)> ProcessImageUrlsWithErrors(
-        IObservable<string> imageUrls,
-        string? prompt = null)
-    {
-        return imageUrls
-            .Where(url => !string.IsNullOrWhiteSpace(url))
-            .Select(url => Observable.Defer(() =>
-                Observable.FromAsync(ct => _ocrService.ProcessImageAsync(url, prompt, ct))
-                    .Select(result => (url, Result: (MistralOcrResult?)result, Error: (Exception?)null))
-                    .Catch<(string, MistralOcrResult?, Exception?), Exception>(ex =>
-                        Observable.Return<(string, MistralOcrResult?, Exception?)>((url, null, ex)))))
             .Merge(_maxConcurrency)
             .ObserveOn(_scheduler)
             .TakeUntil(_dispose);

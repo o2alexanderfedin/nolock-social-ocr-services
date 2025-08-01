@@ -19,8 +19,8 @@ public class MistralOcrServiceIntegrationTests : TestBase
         // Uncomment Skip attribute to run this test manually
         var dataUrl = GetTestImageDataUrl();
         
-        var result = await Fixture.MistralOcrService.ProcessImageDataUrlAsync(
-            dataUrl, 
+        var result = await Fixture.MistralOcrService.ProcessImageDataItemAsync(
+            (new Uri(dataUrl), "image/jpeg"), 
             "Say exactly: CONNECTION_OK");
 
         result.Should().NotBeNull();
@@ -48,7 +48,7 @@ public class MistralOcrServiceIntegrationTests : TestBase
     public async Task ProcessImageDataUrlAsync_WithInvalidDataUrl_ShouldThrowException(string invalidDataUrl)
     {
         // Act
-        var act = async () => await Fixture.MistralOcrService.ProcessImageDataUrlAsync(invalidDataUrl, "test");
+        var act = async () => await Fixture.MistralOcrService.ProcessImageDataItemAsync((new Uri(invalidDataUrl), "image/jpeg"), "test");
         
         // Assert - Either ArgumentException from our validation or HttpRequestException from API
         await act.Should().ThrowAsync<Exception>()
