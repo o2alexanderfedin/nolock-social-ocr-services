@@ -1,0 +1,305 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Nolock.social.CloudflareAI.JsonExtraction.Models;
+using Nolock.social.CloudflareAI.JsonExtraction.Services;
+
+namespace Nolock.social.CloudflareAI.JsonExtraction.Examples;
+
+/// <summary>
+/// Example REST API controller for OCR extraction
+/// </summary>
+[ApiController]
+[Route("api/ocr")]
+[Produces("application/json")]
+public class OcrExtractionController : ControllerBase
+{
+    private readonly OcrExtractionService _ocrService;
+    private readonly ILogger<OcrExtractionController> _logger;
+    
+    public OcrExtractionController(OcrExtractionService ocrService, ILogger<OcrExtractionController> logger)
+    {
+        _ocrService = ocrService;
+        _logger = logger;
+    }
+    
+    /// <summary>
+    /// Extract structured data from OCR text
+    /// </summary>
+    /// <param name="request">Extraction request with document type and content</param>
+    /// <returns>Extracted structured data</returns>
+    /// <response code="200">Returns the extracted data</response>
+    /// <response code="400">If the request is invalid</response>
+    /// <response code="500">If extraction fails</response>
+    [HttpPost("extract")]
+    [ProducesResponseType(typeof(OcrExtractionResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> ExtractDocument([FromBody] OcrExtractionRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem();
+        }
+        
+        _logger.LogInformation("Processing {DocumentType} extraction request", request.DocumentType);
+        
+        var response = await _ocrService.ProcessExtractionRequestAsync(request);
+        
+        if (!response.Success)
+        {
+            return Problem(
+                detail: response.Error,
+                statusCode: StatusCodes.Status500InternalServerError,
+                title: "Extraction Failed"
+            );
+        }
+        
+        return Ok(response);
+    }
+    
+    /// <summary>
+    /// Extract structured data from multiple documents
+    /// </summary>
+    /// <param name="request">Batch extraction request</param>
+    /// <returns>Batch extraction results</returns>
+    [HttpPost("extract/batch")]
+    [ProducesResponseType(typeof(BatchOcrExtractionResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ExtractDocumentsBatch([FromBody] BatchOcrExtractionRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem();
+        }
+        
+        if (request.Contents.Count == 0)
+        {
+            ModelState.AddModelError("Contents", "At least one document must be provided");
+            return ValidationProblem();
+        }
+        
+        if (request.Contents.Count > 100)
+        {
+            ModelState.AddModelError("Contents", "Maximum 100 documents per batch");
+            return ValidationProblem();
+        }
+        
+        _logger.LogInformation("Processing batch of {Count} {DocumentType} documents", 
+            request.Contents.Count, request.DocumentType);
+        
+        var response = await _ocrService.ProcessBatchExtractionRequestAsync(request);
+        
+        return Ok(response);
+    }
+    
+    /// <summary>
+    /// Extract check data from OCR text
+    /// </summary>
+    /// <param name="request">Check extraction request</param>
+    /// <returns>Extracted check data</returns>
+    [HttpPost("extract/check")]
+    [ProducesResponseType(typeof(OcrExtractionResponse<Check>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(OcrExtractionResponse<SimpleCheck>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExtractCheck([FromBody] CheckExtractionRequest request)
+    {
+        var ocrRequest = new OcrExtractionRequest
+        {
+            DocumentType = DocumentType.Check,
+            Content = request.Content,
+            IsImage = request.IsImage,
+            UseSimpleSchema = request.UseSimpleSchema
+        };
+        
+        var response = await _ocrService.ProcessExtractionRequestAsync(ocrRequest);
+        return Ok(response);
+    }
+    
+    /// <summary>
+    /// Extract receipt data from OCR text
+    /// </summary>
+    /// <param name="request">Receipt extraction request</param>
+    /// <returns>Extracted receipt data</returns>
+    [HttpPost("extract/receipt")]
+    [ProducesResponseType(typeof(OcrExtractionResponse<Receipt>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(OcrExtractionResponse<SimpleReceipt>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExtractReceipt([FromBody] ReceiptExtractionRequest request)
+    {
+        var ocrRequest = new OcrExtractionRequest
+        {
+            DocumentType = DocumentType.Receipt,
+            Content = request.Content,
+            IsImage = request.IsImage,
+            UseSimpleSchema = request.UseSimpleSchema
+        };
+        
+        var response = await _ocrService.ProcessExtractionRequestAsync(ocrRequest);
+        return Ok(response);
+    }
+    
+    /// <summary>
+    /// Get supported document types
+    /// </summary>
+    /// <returns>List of supported document types</returns>
+    [HttpGet("document-types")]
+    [ProducesResponseType(typeof(DocumentTypeInfo[]), StatusCodes.Status200OK)]
+    public IActionResult GetDocumentTypes()
+    {
+        var types = Enum.GetValues<DocumentType>()
+            .Select(dt => new DocumentTypeInfo
+            {
+                Value = dt.ToString().ToLowerInvariant(),
+                DisplayName = dt.ToString(),
+                Description = GetDocumentTypeDescription(dt)
+            })
+            .ToArray();
+        
+        return Ok(types);
+    }
+    
+    /// <summary>
+    /// Get extraction schema for a document type
+    /// </summary>
+    /// <param name="documentType">Type of document</param>
+    /// <param name="simple">Whether to return simple schema</param>
+    /// <returns>JSON schema for the document type</returns>
+    [HttpGet("schema/{documentType}")]
+    [ProducesResponseType(typeof(JsonSchema), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public IActionResult GetSchema(string documentType, [FromQuery] bool simple = false)
+    {
+        if (!Enum.TryParse<DocumentType>(documentType, true, out var docType))
+        {
+            return BadRequest(new { error = $"Invalid document type: {documentType}" });
+        }
+        
+        var schema = GetSchemaForDocumentType(docType, simple);
+        return Ok(schema);
+    }
+    
+    private string GetDocumentTypeDescription(DocumentType documentType)
+    {
+        return documentType switch
+        {
+            DocumentType.Check => "Bank check or money order",
+            DocumentType.Receipt => "Receipt from a purchase or transaction",
+            _ => "Unknown document type"
+        };
+    }
+    
+    private JsonSchema GetSchemaForDocumentType(DocumentType documentType, bool simple)
+    {
+        return documentType switch
+        {
+            DocumentType.Check => simple 
+                ? ReflectionSchemaExtensions.FromType<SimpleCheck>()
+                : ReflectionSchemaExtensions.FromType<Check>(),
+                
+            DocumentType.Receipt => simple
+                ? ReflectionSchemaExtensions.FromType<SimpleReceipt>()
+                : ReflectionSchemaExtensions.FromType<Receipt>(),
+                
+            _ => throw new NotSupportedException($"Document type {documentType} is not supported")
+        };
+    }
+}
+
+/// <summary>
+/// Specific request for check extraction
+/// </summary>
+public class CheckExtractionRequest
+{
+    [Required]
+    public string Content { get; set; } = "";
+    
+    public bool IsImage { get; set; }
+    
+    public bool UseSimpleSchema { get; set; }
+}
+
+/// <summary>
+/// Specific request for receipt extraction
+/// </summary>
+public class ReceiptExtractionRequest
+{
+    [Required]
+    public string Content { get; set; } = "";
+    
+    public bool IsImage { get; set; }
+    
+    public bool UseSimpleSchema { get; set; }
+}
+
+/// <summary>
+/// Document type information
+/// </summary>
+public class DocumentTypeInfo
+{
+    public string Value { get; set; } = "";
+    public string DisplayName { get; set; } = "";
+    public string Description { get; set; } = "";
+}
+
+/// <summary>
+/// Example Minimal API endpoints
+/// </summary>
+public static class OcrApiEndpoints
+{
+    public static void MapOcrEndpoints(this WebApplication app)
+    {
+        var ocrApi = app.MapGroup("/api/v2/ocr")
+            .WithTags("OCR Extraction")
+            .WithOpenApi();
+        
+        // Extract document with type parameter
+        ocrApi.MapPost("/extract/{documentType}", async (
+            DocumentType documentType,
+            OcrExtractionRequest request,
+            OcrExtractionService service) =>
+        {
+            request.DocumentType = documentType;
+            var response = await service.ProcessExtractionRequestAsync(request);
+            return response.Success ? Results.Ok(response) : Results.Problem(response.Error);
+        })
+        .WithName("ExtractDocumentByType")
+        .WithSummary("Extract structured data from OCR text for specified document type")
+        .Produces<OcrExtractionResponse<object>>();
+        
+        // Batch extraction with type parameter
+        ocrApi.MapPost("/extract/{documentType}/batch", async (
+            DocumentType documentType,
+            BatchOcrExtractionRequest request,
+            OcrExtractionService service) =>
+        {
+            request.DocumentType = documentType;
+            var response = await service.ProcessBatchExtractionRequestAsync(request);
+            return Results.Ok(response);
+        })
+        .WithName("ExtractDocumentsBatchByType")
+        .WithSummary("Extract structured data from multiple documents")
+        .Produces<BatchOcrExtractionResponse<object>>();
+        
+        // Get available document types
+        ocrApi.MapGet("/types", () =>
+        {
+            var types = Enum.GetValues<DocumentType>()
+                .Select(dt => new
+                {
+                    value = dt,
+                    name = dt.ToString(),
+                    description = dt switch
+                    {
+                        DocumentType.Check => "Bank check or money order",
+                        DocumentType.Receipt => "Receipt from a purchase",
+                        _ => "Unknown"
+                    }
+                });
+            return Results.Ok(types);
+        })
+        .WithName("GetDocumentTypes")
+        .WithSummary("Get all supported document types");
+    }
+}
