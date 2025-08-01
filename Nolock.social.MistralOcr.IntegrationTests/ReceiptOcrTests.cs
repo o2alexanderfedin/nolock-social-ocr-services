@@ -28,7 +28,7 @@ public class ReceiptOcrTests : TestBase
         var dataUrl = TestImageHelper.GetReceiptImageDataUrl(receiptNumber);
 
         // Act
-        var result = await Fixture.MistralOcrService.ProcessImageDataItemAsync((new Uri(dataUrl), "image/jpeg"));
+        var result = await Fixture.MistralOcrService.ProcessImageDataItemAsync((dataUrl, "image/jpeg"));
 
         // Assert
         result.Should().NotBeNull();
@@ -102,7 +102,7 @@ public class ReceiptOcrTests : TestBase
         var dataUrl = TestImageHelper.GetReceiptImageDataUrl(receiptNumber);
 
         // Act
-        var result = await Fixture.MistralOcrService.ProcessImageDataItemAsync((new Uri(dataUrl), "image/jpeg"));
+        var result = await Fixture.MistralOcrService.ProcessImageDataItemAsync((dataUrl, "image/jpeg"));
 
         // Assert
         result.Should().NotBeNull();
@@ -122,7 +122,7 @@ public class ReceiptOcrTests : TestBase
         var dataUrl = TestImageHelper.GetReceiptImageDataUrl(receiptNumber);
 
         // Act
-        var result = await Fixture.MistralOcrService.ProcessImageDataItemAsync((new Uri(dataUrl), "image/jpeg"));
+        var result = await Fixture.MistralOcrService.ProcessImageDataItemAsync((dataUrl, "image/jpeg"));
 
         // Assert
         result.Should().NotBeNull();
@@ -139,7 +139,7 @@ public class ReceiptOcrTests : TestBase
         var tasks = Enumerable
             .Range(1, 5)
             .Select(i => Fixture.MistralOcrService.ProcessImageDataItemAsync(
-                (new Uri(TestImageHelper.GetReceiptImageDataUrl(i)), "image/jpeg")
+                (TestImageHelper.GetReceiptImageDataUrl(i), "image/jpeg")
             ))
             .ToList();
 

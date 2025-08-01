@@ -40,7 +40,7 @@ public sealed class ReactiveMistralOcrService : IReactiveMistralOcrService, IDis
         _retryDelay = retryDelay ?? TimeSpan.FromSeconds(1);
     }
 
-    public IObservable<MistralOcrResult> ProcessImageDataItems(IObservable<(Uri url, string mimeType)> dataItems)
+    public IObservable<MistralOcrResult> ProcessImageDataItems(IObservable<(string url, string mimeType)> dataItems)
     {
         return dataItems
             .Where(dataItem => dataItem.url != null)

@@ -50,7 +50,7 @@ public static class ImageTransformExtensions
         return imageUrls
             .ToDataUrlsWithErrors(transformer)
             .Where(result => result.Success && !string.IsNullOrEmpty(result.DataUrl))
-            .Select(result => (new Uri(result.DataUrl!), result.DetectedMimeType ?? "application/octet-stream"))
+            .Select(result => (result.DataUrl!, result.DetectedMimeType ?? "application/octet-stream"))
             .SelectMany(dataItem => ocrService.ProcessImageDataItems(Observable.Return(dataItem)));
     }
 
@@ -82,7 +82,7 @@ public static class ImageTransformExtensions
                 }
 
                 // Process through OCR
-                return ocrService.ProcessImageDataItems(Observable.Return((new Uri(transformResult.DataUrl), transformResult.DetectedMimeType ?? "application/octet-stream")))
+                return ocrService.ProcessImageDataItems(Observable.Return((transformResult.DataUrl, transformResult.DetectedMimeType ?? "application/octet-stream")))
                     .Select(ocrResult => new ImageOcrProcessingResult
                     {
                         OriginalUrl = transformResult.OriginalUrl,

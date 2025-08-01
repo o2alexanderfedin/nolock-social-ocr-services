@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nolock.social.MistralOcr", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nolock.social.MistralOcr.IntegrationTests", "Nolock.social.MistralOcr.IntegrationTests\Nolock.social.MistralOcr.IntegrationTests.csproj", "{57E3E9DA-EBF9-4CB3-B0D9-6F94B637C0B1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nolock.social.CloudflareAI", "Nolock.social.CloudflareAI\Nolock.social.CloudflareAI.csproj", "{F76836B2-CC53-4937-87A5-50A2EFF7F2B6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nolock.social.CloudflareAI.IntegrationTests", "Nolock.social.CloudflareAI.IntegrationTests\Nolock.social.CloudflareAI.IntegrationTests.csproj", "{AE98FCF1-300E-477D-933C-29EC4874C6CA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,5 +35,13 @@ Global
 		{57E3E9DA-EBF9-4CB3-B0D9-6F94B637C0B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57E3E9DA-EBF9-4CB3-B0D9-6F94B637C0B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57E3E9DA-EBF9-4CB3-B0D9-6F94B637C0B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F76836B2-CC53-4937-87A5-50A2EFF7F2B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F76836B2-CC53-4937-87A5-50A2EFF7F2B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F76836B2-CC53-4937-87A5-50A2EFF7F2B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F76836B2-CC53-4937-87A5-50A2EFF7F2B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE98FCF1-300E-477D-933C-29EC4874C6CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE98FCF1-300E-477D-933C-29EC4874C6CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE98FCF1-300E-477D-933C-29EC4874C6CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE98FCF1-300E-477D-933C-29EC4874C6CA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

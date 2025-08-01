@@ -28,7 +28,7 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
     {
         // Arrange
         var dataUrl = GetTestImageDataUrl();
-        var dataItems = Observable.Return((new Uri(dataUrl), "image/jpeg"));
+        var dataItems = Observable.Return((dataUrl, "image/jpeg"));
         
         // Act
         var results = await _reactiveService.ProcessImageDataItems(dataItems)
@@ -45,7 +45,7 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
     {
         // Arrange
         var dataItems = Observable.Range(1, 3)
-            .Select(i => (new Uri(TestImageHelper.GetReceiptImageDataUrl(i)), "image/jpeg"));
+            .Select(i => (TestImageHelper.GetReceiptImageDataUrl(i), "image/jpeg"));
         
         // Act
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -72,9 +72,9 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
         // Arrange
         var dataItems = new[]
         {
-            (new Uri(TestImageHelper.GetReceiptImageDataUrl(1)), "image/jpeg"),
-            (new Uri(TestImageHelper.GetReceiptImageDataUrl(2)), "image/png"),
-            (new Uri(TestImageHelper.GetReceiptImageDataUrl(3)), "image/webp")
+            (TestImageHelper.GetReceiptImageDataUrl(1), "image/jpeg"),
+            (TestImageHelper.GetReceiptImageDataUrl(2), "image/png"),
+            (TestImageHelper.GetReceiptImageDataUrl(3), "image/webp")
         }.ToObservable();
         
         // Act
@@ -126,7 +126,7 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
     public async Task ProcessImageDataItems_WithEmptyInput_ShouldReturnEmpty()
     {
         // Arrange
-        var emptyDataItems = Observable.Empty<(Uri url, string mimeType)>();
+        var emptyDataItems = Observable.Empty<(string url, string mimeType)>();
         
         // Act
         var results = await _reactiveService.ProcessImageDataItems(emptyDataItems)
@@ -142,9 +142,9 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
         // Arrange
         var dataItems = new[]
         {
-            (new Uri(TestImageHelper.GetReceiptImageDataUrl(1)), "image/jpeg"),
+            (TestImageHelper.GetReceiptImageDataUrl(1), "image/jpeg"),
             (null, "image/jpeg"), // This should be filtered out
-            (new Uri(TestImageHelper.GetReceiptImageDataUrl(2)), "image/png")
+            (TestImageHelper.GetReceiptImageDataUrl(2), "image/png")
         }.Where(item => item.Item1 != null)
         .Select(item => (item.Item1!, item.Item2))
         .ToObservable();
@@ -163,7 +163,7 @@ public class ReactiveMistralOcrServiceIntegrationTests : TestBase
     {
         // Arrange
         var dataUrl = TestImageHelper.GetReceiptImageDataUrl(1);
-        var dataItem = (new Uri(dataUrl), "image/jpeg");
+        var dataItem = (dataUrl, "image/jpeg");
         
         // Act
         var generalResult = await _reactiveService

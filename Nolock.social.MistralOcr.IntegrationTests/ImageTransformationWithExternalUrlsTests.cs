@@ -82,7 +82,7 @@ public class ImageTransformationWithExternalUrlsTests : TestBase
         // Act - transform URL to data URL and process with OCR
         var dataUrl = await _transformer.TransformAsync(imageUrl);
         var ocrResult = await Fixture.MistralOcrService.ProcessImageDataItemAsync(
-            (new Uri(dataUrl), "image/png"));
+            (dataUrl, "image/png"));
         
         // Assert
         ocrResult.Should().NotBeNull();

@@ -18,10 +18,10 @@ public class PipelineNodeImageToUrlTests
         
         Assert.NotNull(result.url);
         Assert.Equal("image/jpeg", result.mimeType);
-        Assert.StartsWith("data:image/jpeg;base64,", result.url.ToString());
+        Assert.StartsWith("data:image/jpeg;base64,", result.url);
         
         // Verify the base64 encoding
-        var base64Part = result.url.ToString().Substring("data:image/jpeg;base64,".Length);
+        var base64Part = result.url.Substring("data:image/jpeg;base64,".Length);
         var decodedBytes = Convert.FromBase64String(base64Part);
         Assert.Equal(jpegData, decodedBytes);
     }
@@ -37,7 +37,7 @@ public class PipelineNodeImageToUrlTests
         
         Assert.NotNull(result.url);
         Assert.Equal("image/png", result.mimeType);
-        Assert.StartsWith("data:image/png;base64,", result.url.ToString());
+        Assert.StartsWith("data:image/png;base64,", result.url);
     }
     
     [Fact]
@@ -51,7 +51,7 @@ public class PipelineNodeImageToUrlTests
         
         Assert.NotNull(result.url);
         Assert.Equal("image/gif", result.mimeType);
-        Assert.StartsWith("data:image/gif;base64,", result.url.ToString());
+        Assert.StartsWith("data:image/gif;base64,", result.url);
     }
     
     [Fact]
@@ -65,7 +65,7 @@ public class PipelineNodeImageToUrlTests
         
         Assert.NotNull(result.url);
         Assert.Equal("image/bmp", result.mimeType);
-        Assert.StartsWith("data:image/bmp;base64,", result.url.ToString());
+        Assert.StartsWith("data:image/bmp;base64,", result.url);
     }
     
     [Fact]
@@ -79,7 +79,7 @@ public class PipelineNodeImageToUrlTests
         
         Assert.NotNull(result.url);
         Assert.Equal("image/heic", result.mimeType);
-        Assert.StartsWith("data:image/heic;base64,", result.url.ToString());
+        Assert.StartsWith("data:image/heic;base64,", result.url);
     }
     
     [Fact]
@@ -144,10 +144,10 @@ public class PipelineNodeImageToUrlTests
         
         Assert.NotNull(result.url);
         Assert.Equal("image/jpeg", result.mimeType);
-        Assert.StartsWith("data:image/jpeg;base64,", result.url.ToString());
+        Assert.StartsWith("data:image/jpeg;base64,", result.url);
         
         // Verify the entire data was encoded
-        var base64Part = result.url.ToString().Substring("data:image/jpeg;base64,".Length);
+        var base64Part = result.url.Substring("data:image/jpeg;base64,".Length);
         var decodedBytes = Convert.FromBase64String(base64Part);
         Assert.Equal(largeData.Length, decodedBytes.Length);
     }
