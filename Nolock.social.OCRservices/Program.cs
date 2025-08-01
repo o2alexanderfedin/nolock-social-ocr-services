@@ -1,7 +1,9 @@
 using System.Reactive.Linq;
+using Microsoft.AspNetCore.Mvc;
 using Nolock.social.MistralOcr;
 using Nolock.social.MistralOcr.Extensions;
 using Nolock.social.OCRservices;
+using Nolock.social.OCRservices.Pipelines;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
@@ -25,50 +27,31 @@ builder.Services.AddReactiveMistralOcr(options =>
     options.RetryDelay = TimeSpan.FromSeconds(1);
 });
 
-// Add Image URL to Data URL transformation services
-builder.Services.AddImageTransformation(options =>
-{
-    options.MaxConcurrency = 4;
-    options.RetryCount = 3;
-    options.RequestTimeout = TimeSpan.FromSeconds(30);
-});
+// No longer need image transformation services since we're using stream input
 
 var app = builder.Build();
 
 var ocrApi = app.MapGroup("/ocr");
 ocrApi.MapPut("/sync", (string type) => Results.Ok(type));
 
-// Mistral OCR endpoint using reactive implementation
+// Mistral OCR endpoint using reactive implementation with stream input
 ocrApi.MapPost("/mistral", async (
-    IReactiveMistralOcrService reactiveOcrService, 
-    IImageUrlToDataUrlTransformer transformer,
-    MistralOcrEndpointRequest request) =>
+    IReactiveMistralOcrService reactiveOcrService,
+    [FromBody] Stream image,
+    string? prompt = null) =>
 {
     try
     {
-        if (string.IsNullOrEmpty(request.ImageUrl) && string.IsNullOrEmpty(request.ImageDataUrl))
-        {
-            return Results.BadRequest("Either ImageUrl or ImageDataUrl must be provided");
-        }
-
-        MistralOcrResult? result;
-
-        if (!string.IsNullOrEmpty(request.ImageUrl))
-        {
-            // For regular URLs, use the transformation pipeline
-            var imageObservable = Observable.Return(request.ImageUrl);
-            result = await imageObservable
-                .ProcessImagesWithTransform(reactiveOcrService, transformer, request.Prompt)
-                .FirstOrDefaultAsync();
-        }
-        else
-        {
-            // For data URLs, process directly
-            var dataUrlObservable = Observable.Return(request.ImageDataUrl!);
-            result = await reactiveOcrService
-                .ProcessImageDataUrls(dataUrlObservable, request.Prompt)
-                .FirstOrDefaultAsync();
-        }
+        // First pipeline step: convert stream to data URL
+        var imageToUrlPipeline = new PipelineNodeImageToUrl();
+        var dataUrlUri = await imageToUrlPipeline.ProcessAsync(image);
+        var dataUrl = dataUrlUri.ToString();
+        
+        // Process using reactive service with data URL
+        var dataUrlObservable = Observable.Return(dataUrl);
+        var result = await reactiveOcrService
+            .ProcessImageDataUrls(dataUrlObservable, prompt)
+            .FirstOrDefaultAsync();
         
         if (result == null)
         {
