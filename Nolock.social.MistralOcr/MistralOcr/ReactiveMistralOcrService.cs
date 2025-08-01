@@ -129,7 +129,7 @@ public sealed class ReactiveMistralOcrService : IReactiveMistralOcrService, IDis
             .Where(url => !string.IsNullOrWhiteSpace(url))
             .Buffer(batchSize)
             .Where(batch => batch.Count > 0)
-            .SelectMany(batch =>
+            .Select(batch =>
             {
                 _logger.LogInformation("Processing batch of {Count} images", batch.Count);
 
@@ -146,6 +146,7 @@ public sealed class ReactiveMistralOcrService : IReactiveMistralOcrService, IDis
                     .ToList()
                     .Do(results => _logger.LogInformation("Completed batch with {Count} results", results.Count));
             })
+            .Merge(1) // Process batches sequentially
             .ObserveOn(_scheduler)
             .TakeUntil(_dispose);
     }
