@@ -29,10 +29,10 @@ public sealed class MistralOcrApiService : IMistralOcrService
         _httpClient = httpClient;
         _configuration = configuration.Value;
         _logger = logger;
-        
+
         // Configure HTTP client
         _httpClient.BaseAddress = new Uri(_configuration.BaseUrl);
-        _httpClient.DefaultRequestHeaders.Authorization = 
+        _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", _configuration.ApiKey);
         _httpClient.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/json"));
@@ -47,7 +47,8 @@ public sealed class MistralOcrApiService : IMistralOcrService
                 onRetry: (outcome, timespan, retryCount, context) =>
                 {
                     var response = outcome.Result;
-                    _logger.LogWarning($"Retry {retryCount} after {timespan}ms, StatusCode: {response?.StatusCode}");
+                    _logger.LogWarning("Retry {RetryCount} after {Timespan}ms, StatusCode: {StatusCode}",
+                        retryCount, timespan.TotalMilliseconds, response?.StatusCode);
                 });
 
         // Configure JSON options
@@ -102,7 +103,7 @@ public sealed class MistralOcrApiService : IMistralOcrService
 
         var base64 = Convert.ToBase64String(imageBytes);
         var dataUrl = $"data:{mimeType};base64,{base64}";
-        
+
         return await ProcessImageDataUrlAsync(dataUrl, prompt, cancellationToken);
     }
 
@@ -119,14 +120,14 @@ public sealed class MistralOcrApiService : IMistralOcrService
         await using var ms = StreamManager.GetStream();
         await imageStream.CopyToAsync(ms, cancellationToken);
         var bytes = ms.ToArray();
-        
+
         return await ProcessImageBytesAsync(bytes, mimeType, prompt, cancellationToken);
     }
 
     private async Task<MistralOcrResult> SendRequestAsync(OcrRequest request, string? prompt, CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
-        
+
         try
         {
             var json = JsonSerializer.Serialize(request, _jsonOptions);
@@ -139,12 +140,12 @@ public sealed class MistralOcrApiService : IMistralOcrService
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogError("Mistral OCR API error response: Status={Status}, Content={Content}", 
+                _logger.LogError("Mistral OCR API error response: Status={Status}, Content={Content}",
                     response.StatusCode, errorContent);
-                
+
                 throw new HttpRequestException(
-                    $"Mistral OCR API error: {response.StatusCode} - {errorContent}", 
-                    null, 
+                    $"Mistral OCR API error: {response.StatusCode} - {errorContent}",
+                    null,
                     response.StatusCode);
             }
 
@@ -161,7 +162,7 @@ public sealed class MistralOcrApiService : IMistralOcrService
 
             // Combine all page markdown content with prompt if provided
             var extractedText = string.Join("\n\n", ocrResponse.Pages.Select(p => p.Markdown));
-            
+
             if (!string.IsNullOrWhiteSpace(prompt))
             {
                 // If a prompt was provided, prepend it to help with context

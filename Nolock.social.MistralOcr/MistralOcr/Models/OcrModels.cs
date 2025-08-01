@@ -2,6 +2,9 @@ using System.Text.Json.Serialization;
 
 namespace Nolock.social.MistralOcr.Models;
 
+/// <summary>
+/// Request model for Mistral OCR API
+/// </summary>
 public class OcrRequest
 {
     [JsonPropertyName("model")]
@@ -39,12 +42,18 @@ public class OcrRequest
     public ResponseFormat? DocumentAnnotationFormat { get; set; }
 }
 
+/// <summary>
+/// Base class for OCR document types
+/// </summary>
 public abstract class OcrDocument
 {
     [JsonPropertyName("type")]
     public abstract string Type { get; }
 }
 
+/// <summary>
+/// Document chunk for file-based content
+/// </summary>
 public class FileChunk : OcrDocument
 {
     public override string Type => "file";
@@ -57,6 +66,9 @@ public class FileChunk : OcrDocument
     public string? FileName { get; set; }
 }
 
+/// <summary>
+/// Document chunk for image URL
+/// </summary>
 public class ImageUrlChunk : OcrDocument
 {
     public override string Type => "image_url";
@@ -69,6 +81,9 @@ public class ImageUrlChunk : OcrDocument
     public string? ImageName { get; set; }
 }
 
+/// <summary>
+/// Document chunk for document URL
+/// </summary>
 public class DocumentUrlChunk : OcrDocument
 {
     public override string Type => "document_url";
@@ -81,6 +96,9 @@ public class DocumentUrlChunk : OcrDocument
     public string? DocumentName { get; set; }
 }
 
+/// <summary>
+/// Response format configuration for OCR API
+/// </summary>
 public class ResponseFormat
 {
     [JsonPropertyName("type")]
@@ -91,6 +109,9 @@ public class ResponseFormat
     public object? JsonSchema { get; set; }
 }
 
+/// <summary>
+/// Response model from Mistral OCR API
+/// </summary>
 public class OcrResponse
 {
     [JsonPropertyName("pages")]
