@@ -61,6 +61,8 @@ public static class Program
 public record Todo;
 
 [JsonSerializable(typeof(Todo[]))]
+[JsonSerializable(typeof(MistralOcrEndpointRequest))]
+[JsonSerializable(typeof(MistralOcrResult))]
 internal sealed partial class AppJsonSerializerContext : JsonSerializerContext
 {
 }
