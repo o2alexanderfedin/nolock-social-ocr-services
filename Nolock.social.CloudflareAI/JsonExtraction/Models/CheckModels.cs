@@ -105,8 +105,8 @@ public class Check
     public string? Payer { get; set; }
     
     [JsonPropertyName("amount")]
-    [Description("Dollar amount of the check as a string to preserve exact decimal representation")]
-    public string? Amount { get; set; }
+    [Description("Dollar amount of the check")]
+    public decimal? Amount { get; set; }
     
     [JsonPropertyName("memo")]
     [Description("Memo or note on the check")]
@@ -177,7 +177,7 @@ public class SimpleCheck
     
     [JsonPropertyName("amount")]
     [Description("Check amount in dollars")]
-    public string? Amount { get; set; }
+    public decimal? Amount { get; set; }
     
     [JsonPropertyName("bank_name")]
     [Description("Name of the bank")]

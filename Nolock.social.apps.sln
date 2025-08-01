@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nolock.social.CloudflareAI"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nolock.social.CloudflareAI.IntegrationTests", "Nolock.social.CloudflareAI.IntegrationTests\Nolock.social.CloudflareAI.IntegrationTests.csproj", "{AE98FCF1-300E-477D-933C-29EC4874C6CA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nolock.social.OCRservices.Core", "Nolock.social.OCRservices.Core\Nolock.social.OCRservices.Core.csproj", "{1187DB24-40A3-4E82-9949-73365BE72333}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nolock.social.CloudflareAI.Tests", "Nolock.social.CloudflareAI.Tests\Nolock.social.CloudflareAI.Tests.csproj", "{BB61542C-64F9-41A8-B3F9-02AED1E095CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,5 +47,13 @@ Global
 		{AE98FCF1-300E-477D-933C-29EC4874C6CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE98FCF1-300E-477D-933C-29EC4874C6CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE98FCF1-300E-477D-933C-29EC4874C6CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1187DB24-40A3-4E82-9949-73365BE72333}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1187DB24-40A3-4E82-9949-73365BE72333}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1187DB24-40A3-4E82-9949-73365BE72333}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1187DB24-40A3-4E82-9949-73365BE72333}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB61542C-64F9-41A8-B3F9-02AED1E095CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB61542C-64F9-41A8-B3F9-02AED1E095CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB61542C-64F9-41A8-B3F9-02AED1E095CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB61542C-64F9-41A8-B3F9-02AED1E095CF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

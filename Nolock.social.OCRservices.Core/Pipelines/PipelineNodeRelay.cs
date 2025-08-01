@@ -1,7 +1,7 @@
 // ReSharper disable UnusedType.Global
 // ReSharper disable UnusedMember.Global
 
-namespace Nolock.social.OCRservices.Pipelines;
+namespace Nolock.social.OCRservices.Core.Pipelines;
 
 public sealed class PipelineNodeRelay<TIn, TOut> : IPipelineNode<TIn, TOut>
 {

@@ -1,9 +1,9 @@
 using Microsoft.IO;
-using Nolock.social.OCRservices.Utils;
+using Nolock.social.OCRservices.Core.Utils;
 
-namespace Nolock.social.OCRservices.Pipelines;
+namespace Nolock.social.OCRservices.Core.Pipelines;
 
-public class PipelineNodeImageToUrl : IPipelineNode<Stream, (string url, string mimeType)>
+public sealed class PipelineNodeImageToUrl : IPipelineNode<Stream, (string url, string mimeType)>
 {
     private static readonly RecyclableMemoryStreamManager StreamManager = new();
     private static readonly MimeTypeTrie MimeTrie = BuildMimeTrie();

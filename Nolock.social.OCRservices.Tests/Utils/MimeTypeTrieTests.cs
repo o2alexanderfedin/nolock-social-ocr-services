@@ -1,4 +1,4 @@
-using Nolock.social.OCRservices.Utils;
+using Nolock.social.OCRservices.Core.Utils;
 
 namespace Nolock.social.OCRservices.Tests.Utils;
 

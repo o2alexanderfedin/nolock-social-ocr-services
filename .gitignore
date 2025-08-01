@@ -112,4 +112,4 @@ ClientBin/
 *.jfm
 *.pfx
 *.publishsettings
-orleans.codegen.cs
+orleans.codegen.csset-env-vars.local.sh

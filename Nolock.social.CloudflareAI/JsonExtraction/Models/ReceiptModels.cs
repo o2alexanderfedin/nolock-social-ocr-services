@@ -126,24 +126,24 @@ public class MerchantInfo
 public class ReceiptTotals
 {
     [JsonPropertyName("subtotal")]
-    [Description("Pre-tax total amount as a string to preserve exact decimal representation")]
-    public string? Subtotal { get; set; }
+    [Description("Pre-tax total amount")]
+    public decimal? Subtotal { get; set; }
     
     [JsonPropertyName("tax")]
-    [Description("Total tax amount as a string to preserve exact decimal representation")]
-    public string? Tax { get; set; }
+    [Description("Total tax amount")]
+    public decimal? Tax { get; set; }
     
     [JsonPropertyName("tip")]
-    [Description("Tip/gratuity amount as a string to preserve exact decimal representation")]
-    public string? Tip { get; set; }
+    [Description("Tip/gratuity amount")]
+    public decimal? Tip { get; set; }
     
     [JsonPropertyName("discount")]
-    [Description("Total discount amount as a string to preserve exact decimal representation")]
-    public string? Discount { get; set; }
+    [Description("Total discount amount")]
+    public decimal? Discount { get; set; }
     
     [JsonPropertyName("total")]
-    [Description("Final total amount including tax, tip, and adjusting for discounts as a string to preserve exact decimal representation")]
-    public string Total { get; set; } = "";
+    [Description("Final total amount including tax, tip, and adjusting for discounts")]
+    public decimal Total { get; set; }
 }
 
 /// <summary>
@@ -168,20 +168,20 @@ public class ReceiptLineItem
     public string? Unit { get; set; }
     
     [JsonPropertyName("unitPrice")]
-    [Description("Price per unit as a string to preserve exact decimal representation")]
-    public string? UnitPrice { get; set; }
+    [Description("Price per unit")]
+    public decimal? UnitPrice { get; set; }
     
     [JsonPropertyName("totalPrice")]
-    [Description("Total price for this line item as a string to preserve exact decimal representation")]
-    public string TotalPrice { get; set; } = "";
+    [Description("Total price for this line item")]
+    public decimal TotalPrice { get; set; }
     
     [JsonPropertyName("discounted")]
     [Description("Whether the item was discounted")]
     public bool? Discounted { get; set; }
     
     [JsonPropertyName("discountAmount")]
-    [Description("Amount of discount applied as a string to preserve exact decimal representation")]
-    public string? DiscountAmount { get; set; }
+    [Description("Amount of discount applied")]
+    public decimal? DiscountAmount { get; set; }
     
     [JsonPropertyName("category")]
     [Description("Product category")]
@@ -206,8 +206,8 @@ public class ReceiptTaxItem
     public string? TaxRate { get; set; }
     
     [JsonPropertyName("taxAmount")]
-    [Description("Tax amount as a string to preserve exact decimal representation")]
-    public string TaxAmount { get; set; } = "";
+    [Description("Tax amount")]
+    public decimal TaxAmount { get; set; }
 }
 
 /// <summary>
@@ -228,8 +228,8 @@ public class ReceiptPaymentMethod
     public string? LastDigits { get; set; }
     
     [JsonPropertyName("amount")]
-    [Description("Amount paid with this method as a string to preserve exact decimal representation")]
-    public string Amount { get; set; } = "";
+    [Description("Amount paid with this method")]
+    public decimal Amount { get; set; }
     
     [JsonPropertyName("transactionId")]
     [Description("Payment transaction ID")]

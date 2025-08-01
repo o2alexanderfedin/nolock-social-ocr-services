@@ -1,0 +1,16 @@
+root = true
+
+[*.cs]
+# Make redundant argument with default value an error
+dotnet_diagnostic.IDE0005.severity = error
+dotnet_diagnostic.IDE0001.severity = error
+dotnet_diagnostic.CA1801.severity = error
+dotnet_diagnostic.RCS1163.severity = error
+
+# Redundant default parameter value
+dotnet_diagnostic.IDE0140.severity = error
+
+# Code style rules
+dotnet_style_prefer_simplified_boolean_expressions = true:error
+dotnet_style_prefer_conditional_expression_over_assignment = true:error
+dotnet_style_prefer_conditional_expression_over_return = true:error

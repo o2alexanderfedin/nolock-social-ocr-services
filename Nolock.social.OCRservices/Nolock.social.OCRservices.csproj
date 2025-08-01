@@ -1,20 +1,21 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <InvariantGlobalization>true</InvariantGlobalization>
-        <PublishAot>true</PublishAot>
+        <PublishAot>false</PublishAot>
         <LangVersion>preview</LangVersion>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <WarningsAsErrors />
+        <WarningsAsErrors>$(WarningsAsErrors);IDE0001;IDE0140</WarningsAsErrors>
         <AnalysisLevel>latest-all</AnalysisLevel>
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>$(NoWarn);CS1591;CA1056;CA1031</NoWarn>
-    </PropertyGroup>
+      <UserSecretsId>4f1168b9-50ec-4dca-be73-7171fa60dfc4</UserSecretsId>
+  </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="CloudFlare.Client" Version="8.0.0" />
@@ -23,12 +24,14 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
       <PackageReference Include="System.Reactive" Version="6.0.1" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Nolock.social.MistralOcr\Nolock.social.MistralOcr.csproj" />
       <ProjectReference Include="..\Nolock.social.CloudflareAI\Nolock.social.CloudflareAI.csproj" />
+      <ProjectReference Include="..\Nolock.social.OCRservices.Core\Nolock.social.OCRservices.Core.csproj" />
     </ItemGroup>
 
 </Project>
