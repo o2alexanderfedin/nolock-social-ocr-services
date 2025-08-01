@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Nolock.social.CloudflareAI;
 using Nolock.social.CloudflareAI.Interfaces;
+using Nolock.social.CloudflareAI.JsonExtraction.Interfaces;
 using Nolock.social.CloudflareAI.JsonExtraction.Models;
 using Nolock.social.CloudflareAI.JsonExtraction.Services;
 using Nolock.social.MistralOcr;
@@ -38,9 +39,7 @@ public class OcrAsyncEndpointTests : IClassFixture<WebApplicationFactory<Program
     {
         // Arrange
         var mockOcrService = new Mock<IReactiveMistralOcrService>();
-        var mockExtractionService = new Mock<OcrExtractionService>(
-            Mock.Of<IWorkersAI>(), 
-            Mock.Of<ILogger<OcrExtractionService>>());
+        var mockExtractionService = new Mock<IOcrExtractionService>();
 
         var ocrResult = new MistralOcrResult
         {
@@ -89,22 +88,54 @@ public class OcrAsyncEndpointTests : IClassFixture<WebApplicationFactory<Program
         imageContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 
         // Act
-        var response = await client.PostAsync($"/ocr/async?documentType={documentType}", imageContent);
+        var endpoint = documentType == "check" ? "/ocr/checks" : "/ocr/receipts";
+        var response = await client.PostAsync(endpoint, imageContent);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         
-        var responseData = await response.Content.ReadFromJsonAsync<OcrAsyncResponse>(_jsonOptions);
+        var responseJson = await response.Content.ReadAsStringAsync();
+        if (documentType == "check")
+        {
+            var checkResponse = JsonSerializer.Deserialize<CheckOcrResponse>(responseJson, _jsonOptions);
+            Assert.NotNull(checkResponse);
+            Assert.NotNull(checkResponse.OcrText);
+            Assert.NotNull(checkResponse.CheckData);
+            Assert.True(checkResponse.Confidence > 0);
+            Assert.True(checkResponse.ProcessingTimeMs > 0);
+        }
+        else
+        {
+            var receiptResponse = JsonSerializer.Deserialize<ReceiptOcrResponse>(responseJson, _jsonOptions);
+            Assert.NotNull(receiptResponse);
+            Assert.NotNull(receiptResponse.OcrText);
+            Assert.NotNull(receiptResponse.ReceiptData);
+            Assert.True(receiptResponse.Confidence > 0);
+            Assert.True(receiptResponse.ProcessingTimeMs > 0);
+        }
+    }
+
+    [Fact]
+    public async Task PostAsync_WithEmptyContent_ReturnsBadRequest()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        using var imageContent = new ByteArrayContent(Array.Empty<byte>());
+        imageContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+
+        // Act
+        var response = await client.PostAsync("/ocr/receipts", imageContent);
+
+        // Assert
+        // Empty content should still be processed, just return a response with success=false
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var responseData = await response.Content.ReadFromJsonAsync<ReceiptOcrResponse>(_jsonOptions);
         Assert.NotNull(responseData);
-        Assert.Equal(documentType, responseData.DocumentType);
-        Assert.NotNull(responseData.OcrText);
-        Assert.NotNull(responseData.ExtractedData);
-        Assert.True(responseData.Confidence > 0);
-        Assert.True(responseData.ProcessingTimeMs > 0);
+        Assert.False(responseData.Success);
     }
 
     [Fact]
-    public async Task PostAsync_WithoutDocumentType_ReturnsBadRequest()
+    public async Task PostAsync_WithInvalidEndpoint_ReturnsNotFound()
     {
         // Arrange
         var client = _factory.CreateClient();
@@ -112,29 +143,10 @@ public class OcrAsyncEndpointTests : IClassFixture<WebApplicationFactory<Program
         imageContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 
         // Act
-        var response = await client.PostAsync("/ocr/async", imageContent);
+        var response = await client.PostAsync("/ocr/invoices", imageContent);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var content = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Document type is required", content);
-    }
-
-    [Fact]
-    public async Task PostAsync_WithInvalidDocumentType_ReturnsBadRequest()
-    {
-        // Arrange
-        var client = _factory.CreateClient();
-        using var imageContent = new ByteArrayContent(new byte[] { 0xFF, 0xD8, 0xFF });
-        imageContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
-
-        // Act
-        var response = await client.PostAsync("/ocr/async?documentType=invoice", imageContent);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var content = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Invalid document type", content);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
@@ -142,9 +154,7 @@ public class OcrAsyncEndpointTests : IClassFixture<WebApplicationFactory<Program
     {
         // Arrange
         var mockOcrService = new Mock<IReactiveMistralOcrService>();
-        var mockExtractionService = new Mock<OcrExtractionService>(
-            Mock.Of<IWorkersAI>(), 
-            Mock.Of<ILogger<OcrExtractionService>>());
+        var mockExtractionService = new Mock<IOcrExtractionService>();
 
         var ocrResult = new MistralOcrResult
         {
@@ -196,7 +206,7 @@ public class OcrAsyncEndpointTests : IClassFixture<WebApplicationFactory<Program
         imageContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 
         // Act
-        var response = await client.PostAsync("/ocr/async?documentType=receipt", imageContent);
+        var response = await client.PostAsync("/ocr/receipts", imageContent);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -205,8 +215,8 @@ public class OcrAsyncEndpointTests : IClassFixture<WebApplicationFactory<Program
         var responseData = JsonSerializer.Deserialize<JsonDocument>(responseJson, _jsonOptions);
         
         Assert.NotNull(responseData);
-        var extractedData = responseData.RootElement.GetProperty("extractedData");
-        var totals = extractedData.GetProperty("totals");
+        var receiptData = responseData.RootElement.GetProperty("receiptData");
+        var totals = receiptData.GetProperty("totals");
         
         // Verify decimal values are properly serialized
         Assert.Equal(16.49m, totals.GetProperty("subtotal").GetDecimal());
@@ -219,9 +229,7 @@ public class OcrAsyncEndpointTests : IClassFixture<WebApplicationFactory<Program
     {
         // Arrange
         var mockOcrService = new Mock<IReactiveMistralOcrService>();
-        var mockExtractionService = new Mock<OcrExtractionService>(
-            Mock.Of<IWorkersAI>(), 
-            Mock.Of<ILogger<OcrExtractionService>>());
+        var mockExtractionService = new Mock<IOcrExtractionService>();
 
         var ocrResult = new MistralOcrResult
         {
@@ -265,7 +273,7 @@ public class OcrAsyncEndpointTests : IClassFixture<WebApplicationFactory<Program
         imageContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 
         // Act
-        var response = await client.PostAsync("/ocr/async?documentType=check", imageContent);
+        var response = await client.PostAsync("/ocr/checks", imageContent);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -274,12 +282,12 @@ public class OcrAsyncEndpointTests : IClassFixture<WebApplicationFactory<Program
         var responseData = JsonSerializer.Deserialize<JsonDocument>(responseJson, _jsonOptions);
         
         Assert.NotNull(responseData);
-        var extractedData = responseData.RootElement.GetProperty("extractedData");
+        var checkData = responseData.RootElement.GetProperty("checkData");
         
         // Verify decimal amount is properly serialized
-        Assert.Equal(1234.56m, extractedData.GetProperty("amount").GetDecimal());
-        Assert.Equal("5678", extractedData.GetProperty("checkNumber").GetString());
-        Assert.Equal("John Doe", extractedData.GetProperty("payee").GetString());
+        Assert.Equal(1234.56m, checkData.GetProperty("amount").GetDecimal());
+        Assert.Equal("5678", checkData.GetProperty("checkNumber").GetString());
+        Assert.Equal("John Doe", checkData.GetProperty("payee").GetString());
     }
 
     [Fact]
@@ -287,9 +295,7 @@ public class OcrAsyncEndpointTests : IClassFixture<WebApplicationFactory<Program
     {
         // Arrange
         var mockOcrService = new Mock<IReactiveMistralOcrService>();
-        var mockExtractionService = new Mock<OcrExtractionService>(
-            Mock.Of<IWorkersAI>(), 
-            Mock.Of<ILogger<OcrExtractionService>>());
+        var mockExtractionService = new Mock<IOcrExtractionService>();
 
         var ocrResult = new MistralOcrResult
         {
@@ -323,11 +329,13 @@ public class OcrAsyncEndpointTests : IClassFixture<WebApplicationFactory<Program
         imageContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 
         // Act
-        var response = await client.PostAsync("/ocr/async?documentType=receipt", imageContent);
+        var response = await client.PostAsync("/ocr/receipts", imageContent);
 
         // Assert
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
-        var content = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Failed to extract receipt data", content);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var responseData = await response.Content.ReadFromJsonAsync<ReceiptOcrResponse>(_jsonOptions);
+        Assert.NotNull(responseData);
+        Assert.False(responseData.Success);
+        Assert.NotNull(responseData.Error);
     }
 }

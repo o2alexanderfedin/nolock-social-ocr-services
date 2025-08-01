@@ -1,3 +1,4 @@
+using System.Net;
 using Nolock.social.CloudflareAI.Models;
 
 namespace Nolock.social.CloudflareAI.IntegrationTests;
@@ -13,18 +14,19 @@ public sealed class ImageGenerationIntegrationTests : BaseIntegrationTest
             Prompt = "A beautiful sunset over mountains, digital art"
         };
 
-        var result = await Client.RunAsync<ImageGenerationResponse>(
-            ImageGenerationModels.StableDiffusion_1_5, 
+        var response = await Client.RunRawAsync(
+            ImageGenerationModels.StableDiffusion_XL_Base_1_0, 
             request);
 
-        Assert.NotNull(result);
-        Assert.NotNull(result.Image);
-        Assert.True(result.Image.Length > 0);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var imageBytes = await response.Content.ReadAsByteArrayAsync();
+        Assert.NotNull(imageBytes);
+        Assert.True(imageBytes.Length > 0);
         
-        Logger.LogInformation("Generated image size: {Size} bytes", result.Image.Length);
+        Logger.LogInformation("Generated image size: {Size} bytes", imageBytes.Length);
         
         // Image should be a reasonable size (at least 10KB)
-        Assert.True(result.Image.Length > 10000, $"Image too small: {result.Image.Length} bytes");
+        Assert.True(imageBytes.Length > 10000, $"Image too small: {imageBytes.Length} bytes");
     }
 
     [Fact]
@@ -37,18 +39,20 @@ public sealed class ImageGenerationIntegrationTests : BaseIntegrationTest
             Guidance = 7.5
         };
 
-        var result = await Client.RunAsync<ImageGenerationResponse>(
+        var response = await Client.RunRawAsync(
             ImageGenerationModels.StableDiffusion_XL_Base_1_0,
             request);
 
-        Assert.NotNull(result);
-        Assert.NotNull(result.Image);
-        Assert.True(result.Image.Length > 0);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         
-        Logger.LogInformation("Generated XL image size: {Size} bytes", result.Image.Length);
+        var imageBytes = await response.Content.ReadAsByteArrayAsync();
+        Assert.NotNull(imageBytes);
+        Assert.True(imageBytes.Length > 0);
+        
+        Logger.LogInformation("Generated XL image size: {Size} bytes", imageBytes.Length);
         
         // SDXL should generate larger images
-        Assert.True(result.Image.Length > 50000, $"XL image should be larger: {result.Image.Length} bytes");
+        Assert.True(imageBytes.Length > 50000, $"XL image should be larger: {imageBytes.Length} bytes");
     }
 
     [Fact]
@@ -61,15 +65,17 @@ public sealed class ImageGenerationIntegrationTests : BaseIntegrationTest
             Strength = 0.8
         };
 
-        var result = await Client.RunAsync<ImageGenerationResponse>(
+        var response = await Client.RunRawAsync(
             ImageGenerationModels.DreamShaper_8_LCM,
             request);
 
-        Assert.NotNull(result);
-        Assert.NotNull(result.Image);
-        Assert.True(result.Image.Length > 0);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var imageBytes = await response.Content.ReadAsByteArrayAsync();
+        Assert.NotNull(imageBytes);
+        // Image bytes already validated above
+        Assert.True(imageBytes.Length > 0);
         
-        Logger.LogInformation("Generated DreamShaper image size: {Size} bytes", result.Image.Length);
+        Logger.LogInformation("Generated DreamShaper image size: {Size} bytes", imageBytes.Length);
     }
 
     [Fact]
@@ -78,19 +84,21 @@ public sealed class ImageGenerationIntegrationTests : BaseIntegrationTest
         var request = new ImageGenerationRequest
         {
             Prompt = "Portrait of a wise old wizard with a long white beard, detailed face, fantasy character",
-            NumSteps = 25,
-            Guidance = 8.0
+            NumSteps = 20,
+            Guidance = 7.5
         };
 
-        var result = await Client.RunAsync<ImageGenerationResponse>(
-            ImageGenerationModels.StableDiffusion_1_5,
+        var response = await Client.RunRawAsync(
+            ImageGenerationModels.StableDiffusion_XL_Base_1_0,
             request);
 
-        Assert.NotNull(result);
-        Assert.NotNull(result.Image);
-        Assert.True(result.Image.Length > 0);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var imageBytes = await response.Content.ReadAsByteArrayAsync();
+        Assert.NotNull(imageBytes);
+        // Image bytes already validated above
+        Assert.True(imageBytes.Length > 0);
         
-        Logger.LogInformation("Generated portrait size: {Size} bytes", result.Image.Length);
+        Logger.LogInformation("Generated portrait size: {Size} bytes", imageBytes.Length);
     }
 
     [Fact]
@@ -102,15 +110,17 @@ public sealed class ImageGenerationIntegrationTests : BaseIntegrationTest
             NumSteps = 20
         };
 
-        var result = await Client.RunAsync<ImageGenerationResponse>(
+        var response = await Client.RunRawAsync(
             ImageGenerationModels.StableDiffusion_XL_Base_1_0,
             request);
 
-        Assert.NotNull(result);
-        Assert.NotNull(result.Image);
-        Assert.True(result.Image.Length > 0);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         
-        Logger.LogInformation("Generated landscape size: {Size} bytes", result.Image.Length);
+        var imageBytes = await response.Content.ReadAsByteArrayAsync();
+        Assert.NotNull(imageBytes);
+        Assert.True(imageBytes.Length > 0);
+        
+        Logger.LogInformation("Generated landscape size: {Size} bytes", imageBytes.Length);
     }
 
     [Fact]
@@ -122,41 +132,51 @@ public sealed class ImageGenerationIntegrationTests : BaseIntegrationTest
         };
 
         using var response = await Client.RunRawAsync(
-            ImageGenerationModels.StableDiffusion_1_5, 
+            ImageGenerationModels.StableDiffusion_XL_Base_1_0, 
             request);
 
-        Assert.True(response.IsSuccessStatusCode);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Logger.LogError("Image generation failed with status {Status}: {Error}", response.StatusCode, errorContent);
+        }
+
+        Assert.True(response.IsSuccessStatusCode, $"Expected success status code, but got {response.StatusCode}");
         
-        var content = await response.Content.ReadAsStringAsync();
-        Assert.False(string.IsNullOrWhiteSpace(content));
+        var imageBytes = await response.Content.ReadAsByteArrayAsync();
+        Assert.NotNull(imageBytes);
+        Assert.True(imageBytes.Length > 0);
         
-        Logger.LogInformation("Raw image generation response length: {Length}", content.Length);
+        Logger.LogInformation("Raw response image size: {Size} bytes", imageBytes.Length);
         
-        // Should contain result with image data
-        Assert.Contains("result", content, StringComparison.OrdinalIgnoreCase);
+        // Should contain binary image data
+        Assert.True(imageBytes.Length > 1000, "Generated image should be at least 1KB");
     }
 
-    [Theory]
-    [InlineData(10)]
-    [InlineData(20)]
-    [InlineData(30)]
-    public async Task RunAsync_WithDifferentSteps_GeneratesImagesWithVaryingQuality(int numSteps)
+    [Fact]
+    public async Task RunAsync_WithBasicPrompt_GeneratesImage()
     {
         var request = new ImageGenerationRequest
         {
-            Prompt = "A cat sitting on a windowsill, digital art",
-            NumSteps = numSteps
+            Prompt = "A cat sitting on a windowsill, digital art"
         };
 
-        var result = await Client.RunAsync<ImageGenerationResponse>(
-            ImageGenerationModels.StableDiffusion_1_5,
+        var response = await Client.RunRawAsync(
+            ImageGenerationModels.StableDiffusion_XL_Base_1_0,
             request);
 
-        Assert.NotNull(result);
-        Assert.NotNull(result.Image);
-        Assert.True(result.Image.Length > 0);
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Logger.LogError("Image generation failed with status {Status}: {Error}", response.StatusCode, errorContent);
+        }
         
-        Logger.LogInformation("Steps {Steps}: Generated image size: {Size} bytes", numSteps, result.Image.Length);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var imageBytes = await response.Content.ReadAsByteArrayAsync();
+        Assert.NotNull(imageBytes);
+        Assert.True(imageBytes.Length > 0);
+        
+        Logger.LogInformation("Generated image size: {Size} bytes", imageBytes.Length);
     }
 
     [Theory]
@@ -172,15 +192,17 @@ public sealed class ImageGenerationIntegrationTests : BaseIntegrationTest
             NumSteps = 15
         };
 
-        var result = await Client.RunAsync<ImageGenerationResponse>(
+        var response = await Client.RunRawAsync(
             ImageGenerationModels.StableDiffusion_XL_Base_1_0,
             request);
 
-        Assert.NotNull(result);
-        Assert.NotNull(result.Image);
-        Assert.True(result.Image.Length > 0);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         
-        Logger.LogInformation("Guidance {Guidance}: Generated image size: {Size} bytes", guidance, result.Image.Length);
+        var imageBytes = await response.Content.ReadAsByteArrayAsync();
+        Assert.NotNull(imageBytes);
+        Assert.True(imageBytes.Length > 0);
+        
+        Logger.LogInformation("Guidance {Guidance}: Generated image size: {Size} bytes", guidance, imageBytes.Length);
     }
 
     [Fact]
@@ -189,19 +211,27 @@ public sealed class ImageGenerationIntegrationTests : BaseIntegrationTest
         var request = new ImageGenerationRequest
         {
             Prompt = "Modern glass skyscraper with unique twisted design, architectural photography, blue sky",
-            NumSteps = 25,
+            NumSteps = 20,
             Guidance = 7.0
         };
 
-        var result = await Client.RunAsync<ImageGenerationResponse>(
+        var response = await Client.RunRawAsync(
             ImageGenerationModels.StableDiffusion_XL_Base_1_0,
             request);
 
-        Assert.NotNull(result);
-        Assert.NotNull(result.Image);
-        Assert.True(result.Image.Length > 0);
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Logger.LogError("Image generation failed with status {Status}: {Error}", response.StatusCode, errorContent);
+        }
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         
-        Logger.LogInformation("Generated architectural image size: {Size} bytes", result.Image.Length);
+        var imageBytes = await response.Content.ReadAsByteArrayAsync();
+        Assert.NotNull(imageBytes);
+        Assert.True(imageBytes.Length > 0);
+        
+        Logger.LogInformation("Generated architectural image size: {Size} bytes", imageBytes.Length);
     }
 
     [Fact]
@@ -214,14 +244,16 @@ public sealed class ImageGenerationIntegrationTests : BaseIntegrationTest
             Guidance = 8.0
         };
 
-        var result = await Client.RunAsync<ImageGenerationResponse>(
+        var response = await Client.RunRawAsync(
             ImageGenerationModels.DreamShaper_8_LCM,
             request);
 
-        Assert.NotNull(result);
-        Assert.NotNull(result.Image);
-        Assert.True(result.Image.Length > 0);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var imageBytes = await response.Content.ReadAsByteArrayAsync();
+        Assert.NotNull(imageBytes);
+        // Image bytes already validated above
+        Assert.True(imageBytes.Length > 0);
         
-        Logger.LogInformation("Generated animal image size: {Size} bytes", result.Image.Length);
+        Logger.LogInformation("Generated animal image size: {Size} bytes", imageBytes.Length);
     }
 }

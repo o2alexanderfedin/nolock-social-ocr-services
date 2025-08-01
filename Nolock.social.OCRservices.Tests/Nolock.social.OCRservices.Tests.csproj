@@ -27,4 +27,8 @@
     <ProjectReference Include="..\Nolock.social.OCRservices.Core\Nolock.social.OCRservices.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="TestData\Images\**\*" />
+  </ItemGroup>
+
 </Project>

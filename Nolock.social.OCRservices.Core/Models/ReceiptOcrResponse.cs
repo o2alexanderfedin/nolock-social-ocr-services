@@ -1,26 +1,21 @@
+using Nolock.social.CloudflareAI.JsonExtraction.Models;
+
 namespace Nolock.social.OCRservices.Core.Models;
 
 /// <summary>
-/// Response model for async OCR processing endpoint
+/// Response model for receipt OCR processing endpoint
 /// </summary>
-#pragma warning disable CA1812 // Used by OpenAPI/Swagger documentation
-public sealed class OcrAsyncResponse
-#pragma warning restore CA1812
+public sealed class ReceiptOcrResponse
 {
     /// <summary>
-    /// Type of document processed (check or receipt)
-    /// </summary>
-    public string DocumentType { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Raw OCR text extracted from the image
+    /// Raw OCR text extracted from the receipt image
     /// </summary>
     public string OcrText { get; set; } = string.Empty;
     
     /// <summary>
-    /// Structured data extracted based on document type
+    /// Structured receipt data extracted from the OCR text
     /// </summary>
-    public object? ExtractedData { get; set; }
+    public Receipt? ReceiptData { get; set; }
     
     /// <summary>
     /// Confidence score of the extraction (0.0 to 1.0)
@@ -41,4 +36,14 @@ public sealed class OcrAsyncResponse
     /// Total tokens consumed during processing
     /// </summary>
     public int? TotalTokens { get; set; }
+    
+    /// <summary>
+    /// Indicates if the extraction was successful
+    /// </summary>
+    public bool Success { get; set; }
+    
+    /// <summary>
+    /// Error message if extraction failed
+    /// </summary>
+    public string? Error { get; set; }
 }

@@ -59,14 +59,14 @@ public enum BankAccountType
 /// <summary>
 /// Additional metadata about the check extraction
 /// </summary>
-public class CheckMetadata
+public sealed class CheckMetadata
 {
     [JsonPropertyName("confidenceScore")]
-    [Description("Overall confidence of extraction (0-1)")]
+    [Description("Confidence score of the extraction")]
     public double ConfidenceScore { get; set; }
     
     [JsonPropertyName("sourceImageId")]
-    [Description("Reference to the source image")]
+    [Description("Identifier of the source image")]
     public string? SourceImageId { get; set; }
     
     [JsonPropertyName("ocrProvider")]
@@ -74,7 +74,7 @@ public class CheckMetadata
     public string? OcrProvider { get; set; }
     
     [JsonPropertyName("warnings")]
-    [Description("List of warning messages")]
+    [Description("List of warnings from the extraction process")]
     public List<string>? Warnings { get; set; }
 }
 
@@ -82,18 +82,14 @@ public class CheckMetadata
 /// Check data extracted from images
 /// </summary>
 [Description("Schema for check data extracted from images")]
-public class Check
+public sealed class Check
 {
-    [JsonPropertyName("isValidInput")]
-    [Description("Indicates if the input appears to be a valid check image")]
-    public bool? IsValidInput { get; set; }
-    
     [JsonPropertyName("checkNumber")]
     [Description("Check number or identifier")]
     public string? CheckNumber { get; set; }
     
     [JsonPropertyName("date")]
-    [Description("Date on the check (ISO 8601 format)")]
+    [Description("Date on the check (ISO 8601 format when transmitted as string)")]
     public DateTime? Date { get; set; }
     
     [JsonPropertyName("payee")]
@@ -105,8 +101,12 @@ public class Check
     public string? Payer { get; set; }
     
     [JsonPropertyName("amount")]
-    [Description("Dollar amount of the check")]
+    [Description("Dollar amount of the check - converted from string to decimal for C# type safety")]
     public decimal? Amount { get; set; }
+    
+    [JsonPropertyName("amountText")]
+    [Description("Written amount text on the check")]
+    public string? AmountText { get; set; }
     
     [JsonPropertyName("memo")]
     [Description("Memo or note on the check")]
@@ -125,12 +125,12 @@ public class Check
     public string? AccountNumber { get; set; }
     
     [JsonPropertyName("checkType")]
-    [Description("Type of check (e.g., 'personal', 'business')")]
-    public string? CheckType { get; set; }
+    [Description("Type of check")]
+    public CheckType? CheckType { get; set; }
     
     [JsonPropertyName("accountType")]
-    [Description("Type of account (e.g., 'checking', 'savings')")]
-    public string? AccountType { get; set; }
+    [Description("Type of bank account")]
+    public BankAccountType? AccountType { get; set; }
     
     [JsonPropertyName("signature")]
     [Description("Whether the check appears to be signed")]
@@ -153,8 +153,12 @@ public class Check
     public CheckMetadata? Metadata { get; set; }
     
     [JsonPropertyName("confidence")]
-    [Description("Overall confidence score (0-1)")]
+    [Description("Overall confidence score of the extraction")]
     public double Confidence { get; set; }
+    
+    [JsonPropertyName("isValidInput")]
+    [Description("Indicates if the input appears to be a valid check image. False if the system has detected potential hallucinations")]
+    public bool? IsValidInput { get; set; }
 }
 
 /// <summary>

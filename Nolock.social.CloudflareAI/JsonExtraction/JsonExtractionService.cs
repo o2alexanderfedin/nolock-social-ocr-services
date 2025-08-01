@@ -42,7 +42,7 @@ public sealed class JsonExtractionService : IDisposable
         {
             Text = text,
             Schema = schema,
-            Model = model ?? TextGenerationModels.Llama3_1_8B_Instruct,
+            Model = model ?? TextGenerationModels.Llama3_3_70B_Instruct_FP8_Fast,
             Options = options ?? new ExtractionOptions()
         };
 
@@ -139,7 +139,10 @@ public sealed class JsonExtractionService : IDisposable
             request,
             cancellationToken);
 
-        var jsonText = response.Response ?? response.GeneratedText ?? "";
+        var rawJsonText = response.Response ?? response.GeneratedText ?? "";
+        
+        // Clean the JSON text (remove markdown formatting if present)
+        var jsonText = CleanJsonText(rawJsonText);
 
         // Validate and parse the JSON
         try
@@ -182,6 +185,61 @@ public sealed class JsonExtractionService : IDisposable
                 ExtractedJson = jsonText
             };
         }
+    }
+
+    /// <summary>
+    /// Cleans JSON text by removing markdown formatting and other common AI response artifacts
+    /// </summary>
+    private static string CleanJsonText(string rawJson)
+    {
+        if (string.IsNullOrWhiteSpace(rawJson))
+            return rawJson;
+
+        var cleaned = rawJson.Trim();
+        
+        // Remove markdown code blocks
+        if (cleaned.StartsWith("```json", StringComparison.OrdinalIgnoreCase))
+        {
+            // Find the end of the opening markdown
+            var startIndex = cleaned.IndexOf('\n');
+            if (startIndex != -1)
+            {
+                cleaned = cleaned.Substring(startIndex + 1);
+            }
+        }
+        else if (cleaned.StartsWith("```", StringComparison.OrdinalIgnoreCase))
+        {
+            // Handle generic code blocks
+            var startIndex = cleaned.IndexOf('\n');
+            if (startIndex != -1)
+            {
+                cleaned = cleaned.Substring(startIndex + 1);
+            }
+        }
+        
+        // Remove closing markdown
+        if (cleaned.EndsWith("```", StringComparison.OrdinalIgnoreCase))
+        {
+            var endIndex = cleaned.LastIndexOf("```");
+            if (endIndex > 0)
+            {
+                cleaned = cleaned.Substring(0, endIndex);
+            }
+        }
+        
+        // Remove common prefixes that AI might add
+        cleaned = cleaned.Trim();
+        if (cleaned.StartsWith("Here is the JSON:", StringComparison.OrdinalIgnoreCase) ||
+            cleaned.StartsWith("Here's the JSON:", StringComparison.OrdinalIgnoreCase))
+        {
+            var colonIndex = cleaned.IndexOf(':');
+            if (colonIndex != -1 && colonIndex < cleaned.Length - 1)
+            {
+                cleaned = cleaned.Substring(colonIndex + 1).Trim();
+            }
+        }
+        
+        return cleaned.Trim();
     }
 
     private string BuildExtractionPrompt(string text, JsonSchema schema, ExtractionOptions options)
