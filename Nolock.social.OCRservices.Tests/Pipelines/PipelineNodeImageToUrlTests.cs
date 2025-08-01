@@ -128,7 +128,7 @@ public class PipelineNodeImageToUrlTests
         largeData[0] = 0xFF;
         largeData[1] = 0xD8;
         // Fill rest with dummy data
-        for (int i = 2; i < largeData.Length; i++)
+        for (var i = 2; i < largeData.Length; i++)
         {
             largeData[i] = (byte)(i % 256);
         }
