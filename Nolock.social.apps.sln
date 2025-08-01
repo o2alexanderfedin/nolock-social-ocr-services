@@ -5,6 +5,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nolock.social.OCRservices",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nolock.social.OCRservices.Tests", "Nolock.social.OCRservices.Tests\Nolock.social.OCRservices.Tests.csproj", "{E43803C5-117B-47DF-BF19-A5928C247965}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nolock.social.MistralOcr", "Nolock.social.MistralOcr\Nolock.social.MistralOcr.csproj", "{DCB74A2B-EAC9-4A64-8AD2-B25B18E75E85}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nolock.social.MistralOcr.IntegrationTests", "Nolock.social.MistralOcr.IntegrationTests\Nolock.social.MistralOcr.IntegrationTests.csproj", "{57E3E9DA-EBF9-4CB3-B0D9-6F94B637C0B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,5 +23,13 @@ Global
 		{E43803C5-117B-47DF-BF19-A5928C247965}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E43803C5-117B-47DF-BF19-A5928C247965}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E43803C5-117B-47DF-BF19-A5928C247965}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCB74A2B-EAC9-4A64-8AD2-B25B18E75E85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCB74A2B-EAC9-4A64-8AD2-B25B18E75E85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCB74A2B-EAC9-4A64-8AD2-B25B18E75E85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCB74A2B-EAC9-4A64-8AD2-B25B18E75E85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57E3E9DA-EBF9-4CB3-B0D9-6F94B637C0B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57E3E9DA-EBF9-4CB3-B0D9-6F94B637C0B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57E3E9DA-EBF9-4CB3-B0D9-6F94B637C0B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57E3E9DA-EBF9-4CB3-B0D9-6F94B637C0B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
