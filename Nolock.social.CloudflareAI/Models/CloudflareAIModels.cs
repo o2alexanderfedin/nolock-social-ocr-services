@@ -41,4 +41,5 @@ public static class VisionModels
 {
     public const string Llava_1_5_7B_HF = "@cf/llava-hf/llava-1.5-7b-hf";
     public const string UForm_Gen2_QWen_500M = "@cf/unum/uform-gen2-qwen-500m";
+    public const string Llama3_2_11B_Vision_Instruct = "@cf/meta/llama-3.2-11b-vision-instruct";
 }

@@ -4,6 +4,7 @@ using Nolock.social.MistralOcr.Extensions;
 using Nolock.social.OCRservices;
 using Nolock.social.OCRservices.Services;
 using Nolock.social.CloudflareAI;
+using Nolock.social.CloudflareAI.JsonExtraction.Interfaces;
 using Nolock.social.CloudflareAI.JsonExtraction.Services;
 using Nolock.social.OCRservices.Core.Models;
 
@@ -54,12 +55,10 @@ builder.Services.AddWorkersAI(options =>
 });
 
 // Add OCR extraction service
-builder.Services.AddScoped<OcrExtractionService>();
+builder.Services.AddScoped<IOcrExtractionService, OcrExtractionService>();
 
-// Add refactored services following SOLID principles
+// Add simplified OCR request handler
 builder.Services.AddScoped<IOcrRequestHandler, OcrRequestHandler>();
-builder.Services.AddScoped<IImageToDataUrlConverter, ImageToDataUrlConverter>();
-builder.Services.AddScoped<IDocumentTypeValidator, DocumentTypeValidator>();
 
 var app = builder.Build();
 
@@ -72,20 +71,27 @@ app.UseSwaggerUI(options =>
 var ocrApi = app.MapGroup("/ocr")
     .WithTags("OCR Operations");
 
-// Mistral OCR endpoint using refactored service with separated concerns
-ocrApi.MapPost("/async", async (
+// Receipt OCR endpoint
+ocrApi.MapPost("/receipts", async (
     IOcrRequestHandler ocrHandler,
-    HttpContext context,
-    [FromBody] Stream image) =>
-{
-    var documentTypeString = context.Request.Query["documentType"].FirstOrDefault();
-    return await ocrHandler.HandleAsync(image, documentTypeString).ConfigureAwait(false);
-})
-.WithName("ProcessOcrAsync")
-.WithSummary("Process image with OCR and extract structured data")
-.WithDescription("Processes an image using Mistral OCR and extracts structured data based on document type (check or receipt). Pass documentType query parameter with value 'check' or 'receipt'.")
+    [FromBody] Stream image) => await ocrHandler.HandleReceiptAsync(image).ConfigureAwait(false))
+.WithName("ProcessReceiptOcr")
+.WithSummary("Process receipt image with OCR and extract structured data")
+.WithDescription("Processes a receipt image using Mistral OCR and extracts structured receipt data including merchant info, totals, items, and payment details.")
 .Accepts<Stream>("application/octet-stream")
-.Produces<OcrAsyncResponse>(StatusCodes.Status200OK)
+.Produces<ReceiptOcrResponse>(StatusCodes.Status200OK)
+.ProducesValidationProblem()
+.ProducesProblem(StatusCodes.Status400BadRequest);
+
+// Check OCR endpoint
+ocrApi.MapPost("/checks", async (
+    IOcrRequestHandler ocrHandler,
+    [FromBody] Stream image) => await ocrHandler.HandleCheckAsync(image).ConfigureAwait(false))
+.WithName("ProcessCheckOcr")
+.WithSummary("Process check image with OCR and extract structured data")
+.WithDescription("Processes a check image using Mistral OCR and extracts structured check data including amount, payee, payer, bank info, and routing details.")
+.Accepts<Stream>("application/octet-stream")
+.Produces<CheckOcrResponse>(StatusCodes.Status200OK)
 .ProducesValidationProblem()
 .ProducesProblem(StatusCodes.Status400BadRequest);
 

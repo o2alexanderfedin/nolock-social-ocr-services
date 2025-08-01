@@ -304,7 +304,7 @@ public class JsonDeserializationTests
             },
             Taxes = new List<ReceiptTaxItem>
             {
-                new() { TaxName = "state", TaxRate = "8.0", TaxAmount = 3.12m }
+                new() { TaxName = "state", TaxRate = 8.0m, TaxAmount = 3.12m }
             },
             PaymentMethod = "credit"
         };

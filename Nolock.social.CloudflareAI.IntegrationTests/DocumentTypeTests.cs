@@ -65,7 +65,7 @@ public class DocumentTypeTests
             Data = new SimpleCheck 
             { 
                 CheckNumber = "1234",
-                Amount = "100.00"
+                Amount = 100.00m
             },
             Confidence = 0.95,
             ProcessingTimeMs = 150

@@ -13,7 +13,7 @@
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <NoWarn>$(NoWarn);CS1591;CA1056;CA1031</NoWarn>
+        <NoWarn>$(NoWarn);CS1591;CA1056;CA1031;CA1515</NoWarn>
       <UserSecretsId>4f1168b9-50ec-4dca-be73-7171fa60dfc4</UserSecretsId>
   </PropertyGroup>
 

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Nolock.social.CloudflareAI.JsonExtraction.Models;
 using Xunit;
 
@@ -8,7 +9,8 @@ public class ReceiptModelsTests
 {
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
     };
 
     [Fact]
@@ -96,7 +98,7 @@ public class ReceiptModelsTests
         var json = """
         {
             "taxName": "sales",
-            "taxRate": "8.25",
+            "taxRate": 8.25,
             "taxAmount": 12.38
         }
         """;
@@ -107,7 +109,7 @@ public class ReceiptModelsTests
         // Assert
         Assert.NotNull(tax);
         Assert.Equal("sales", tax.TaxName);
-        Assert.Equal("8.25", tax.TaxRate);
+        Assert.Equal(8.25m, tax.TaxRate);
         Assert.Equal(12.38m, tax.TaxAmount);
     }
 
@@ -117,7 +119,7 @@ public class ReceiptModelsTests
         // Arrange
         var json = """
         {
-            "method": "credit_card",
+            "method": "credit",
             "lastDigits": "1234",
             "amount": 59.25
         }
@@ -128,7 +130,7 @@ public class ReceiptModelsTests
 
         // Assert
         Assert.NotNull(payment);
-        Assert.Equal("credit_card", payment.Method);
+        Assert.Equal(PaymentMethod.Credit, payment.Method);
         Assert.Equal("1234", payment.LastDigits);
         Assert.Equal(59.25m, payment.Amount);
     }
@@ -164,7 +166,7 @@ public class ReceiptModelsTests
             "taxes": [
                 {
                     "taxName": "state",
-                    "taxRate": "8.0",
+                    "taxRate": 8.0,
                     "taxAmount": 1.68
                 }
             ],

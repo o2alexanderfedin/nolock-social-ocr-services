@@ -12,4 +12,18 @@ public interface IOcrRequestHandler
     /// <param name="documentTypeString">The document type as a string</param>
     /// <returns>The processing result</returns>
     Task<IResult> HandleAsync(Stream imageStream, string? documentTypeString);
+    
+    /// <summary>
+    /// Processes a receipt image and returns structured receipt data
+    /// </summary>
+    /// <param name="imageStream">The receipt image stream to process</param>
+    /// <returns>The receipt processing result</returns>
+    Task<IResult> HandleReceiptAsync(Stream imageStream);
+    
+    /// <summary>
+    /// Processes a check image and returns structured check data
+    /// </summary>
+    /// <param name="imageStream">The check image stream to process</param>
+    /// <returns>The check processing result</returns>
+    Task<IResult> HandleCheckAsync(Stream imageStream);
 }

@@ -3,7 +3,7 @@ namespace Nolock.social.OCRservices.Configuration;
 /// <summary>
 /// Configuration constants for OCR processing
 /// </summary>
-public static class OcrConfiguration
+internal static class OcrConfiguration
 {
     /// <summary>
     /// Default maximum number of concurrent OCR operations
