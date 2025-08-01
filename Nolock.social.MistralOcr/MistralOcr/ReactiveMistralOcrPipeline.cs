@@ -74,8 +74,8 @@ public sealed class ReactiveMistralOcrPipeline : IDisposable
     {
         return Observable.Interval(window)
             .CombineLatest(
-                Results.Scan(0, (count, _) => count + 1),
-                Errors.Scan(0, (count, _) => count + 1),
+                Results.Scan(0, (count, _) => count + 1).StartWith(0),
+                Errors.Scan(0, (count, _) => count + 1).StartWith(0),
                 (_, successCount, errorCount) => new PipelineStatistics
                 {
                     Timestamp = DateTimeOffset.UtcNow,
@@ -94,7 +94,7 @@ public sealed class ReactiveMistralOcrPipeline : IDisposable
         {
             var startTime = DateTimeOffset.UtcNow;
 
-            MistralOcrResult result = request.InputType switch
+            var result = request.InputType switch
             {
                 OcrInputType.Url => await _ocrService.ProcessImageAsync(request.Input, request.Prompt),
                 OcrInputType.DataUrl => await _ocrService.ProcessImageDataUrlAsync(request.Input, request.Prompt),
