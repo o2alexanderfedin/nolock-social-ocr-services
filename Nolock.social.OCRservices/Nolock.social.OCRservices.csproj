@@ -28,6 +28,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Nolock.social.MistralOcr\Nolock.social.MistralOcr.csproj" />
+      <ProjectReference Include="..\Nolock.social.CloudflareAI\Nolock.social.CloudflareAI.csproj" />
     </ItemGroup>
 
 </Project>
