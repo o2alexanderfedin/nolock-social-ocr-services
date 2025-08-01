@@ -1,0 +1,187 @@
+using System.Reactive.Linq;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.OpenApi.Models;
+using Nolock.social.MistralOcr;
+using Nolock.social.MistralOcr.Extensions;
+using Nolock.social.OCRservices;
+using Nolock.social.OCRservices.Pipelines;
+using Nolock.social.CloudflareAI;
+using Nolock.social.CloudflareAI.JsonExtraction.Models;
+using Nolock.social.CloudflareAI.JsonExtraction.Services;
+
+var builder = WebApplication.CreateSlimBuilder(args);
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+});
+
+// Add Swagger/OpenAPI support
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "OCR Services API",
+        Version = "v1",
+        Description = "API for OCR processing with document type recognition (check/receipt)",
+        Contact = new OpenApiContact
+        {
+            Name = "OCR Services Team",
+            Email = "support@nolock.social"
+        }
+    });
+
+    // Enable XML comments (optional)
+    // var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    // options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+});
+
+// Add Mistral OCR service
+builder.Services.AddMistralOcr(options =>
+{
+    options.ApiKey = builder.Configuration["MistralOcr:ApiKey"] ?? throw new InvalidOperationException("MistralOcr:ApiKey is required");
+    options.Model = builder.Configuration["MistralOcr:Model"] ?? "mistral-ocr-latest";
+});
+
+// Add Reactive Mistral OCR services
+builder.Services.AddReactiveMistralOcr(options =>
+{
+    options.MaxConcurrency = 4;
+    options.RetryCount = 3;
+    options.RetryDelay = TimeSpan.FromSeconds(1);
+});
+
+// Add CloudflareAI services
+builder.Services.AddWorkersAI(options =>
+{
+    options.AccountId = builder.Configuration["CloudflareAI:AccountId"] ?? throw new InvalidOperationException("CloudflareAI:AccountId is required");
+    options.ApiToken = builder.Configuration["CloudflareAI:ApiToken"] ?? throw new InvalidOperationException("CloudflareAI:ApiToken is required");
+});
+
+// Add OCR extraction service
+builder.Services.AddScoped<OcrExtractionService>();
+
+var app = builder.Build();
+
+// Enable Swagger in development
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "OCR Services API V1");
+        // Optionally set Swagger UI at the app's root
+        // options.RoutePrefix = string.Empty;
+    });
+}
+
+var ocrApi = app.MapGroup("/ocr")
+    .WithTags("OCR Operations")
+    .WithOpenApi();
+
+// Sync endpoint
+ocrApi.MapPut("/sync", (string type) => Results.Ok(type))
+    .WithName("ProcessOcrSync")
+    .WithSummary("Synchronous OCR processing")
+    .WithDescription("Process OCR synchronously (placeholder endpoint)")
+    .Produces<string>(StatusCodes.Status200OK);
+
+// Async endpoint with document type recognition
+ocrApi.MapPost("/async", async (
+    IReactiveMistralOcrService reactiveOcrService,
+    OcrExtractionService ocrExtractionService,
+    [FromQuery] DocumentType? documentType,
+    [FromBody] Stream image) =>
+{
+    try
+    {
+        // Validate document type
+        if (documentType == null)
+        {
+            return Results.BadRequest("Document type is required. Valid values: check, receipt");
+        }
+
+        // First pipeline step: convert stream to data URL
+        var imageToUrlPipeline = new PipelineNodeImageToUrl();
+        var dataItem = await imageToUrlPipeline.ProcessAsync(image);
+
+        // Process using reactive service with data URL to get OCR text
+        var dataItemsObservable = Observable.Return(dataItem);
+        var ocrResult = await reactiveOcrService
+            .ProcessImageDataItems(dataItemsObservable)
+            .FirstOrDefaultAsync();
+        
+        if (ocrResult == null || string.IsNullOrWhiteSpace(ocrResult.Text))
+        {
+            return Results.Problem("Failed to extract text from image");
+        }
+
+        // Extract structured data based on document type
+        var extractionRequest = new OcrExtractionRequest
+        {
+            DocumentType = documentType.Value,
+            Content = ocrResult.Text,
+            IsImage = false
+        };
+
+        var extractionResponse = await ocrExtractionService.ProcessExtractionRequestAsync(extractionRequest);
+        
+        if (!extractionResponse.Success)
+        {
+            return Results.Problem($"Failed to extract {documentType} data: {extractionResponse.Error}");
+        }
+        
+        return Results.Ok(new
+        {
+            documentType = extractionResponse.DocumentType.ToString().ToLower(),
+            ocrText = ocrResult.Text,
+            extractedData = extractionResponse.Data,
+            confidence = extractionResponse.Confidence,
+            processingTimeMs = extractionResponse.ProcessingTimeMs
+        });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message);
+    }
+})
+.WithName("ProcessOcrAsync")
+.WithSummary("Process image with OCR and extract structured data")
+.WithDescription("Processes an image using Mistral OCR and extracts structured data based on document type (check or receipt)")
+.WithOpenApi(operation =>
+{
+    operation.Parameters[0].Description = "Type of document to recognize: 'check' for bank checks or 'receipt' for purchase receipts";
+    return operation;
+})
+.Accepts<Stream>("application/octet-stream")
+.Produces<OcrExtractionResponse<object>>(StatusCodes.Status200OK)
+.ProducesValidationProblem()
+.ProducesProblem(StatusCodes.Status400BadRequest)
+.DisableAntiforgery(); // Required for stream body
+
+// Optional: Add a health check endpoint
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
+    .WithTags("Health")
+    .WithName("HealthCheck")
+    .WithSummary("Health check endpoint")
+    .Produces<object>(StatusCodes.Status200OK)
+    .ExcludeFromDescription(); // Optional: hide from Swagger
+
+app.Run();
+
+// Response DTOs for Swagger documentation (optional)
+public class OcrAsyncResponse
+{
+    public string DocumentType { get; set; } = string.Empty;
+    public string OcrText { get; set; } = string.Empty;
+    public object? ExtractedData { get; set; }
+    public double Confidence { get; set; }
+    public long ProcessingTimeMs { get; set; }
+}
+
+public class HealthCheckResponse
+{
+    public string Status { get; set; } = "healthy";
+    public DateTime Timestamp { get; set; }
+}

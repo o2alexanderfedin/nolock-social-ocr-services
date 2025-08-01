@@ -239,7 +239,7 @@ public static class OcrExtractionExamples
                     IsValidInput = false,
                     Confidence = 0.1,
                     Merchant = new MerchantInfo { Name = "Unknown" },
-                    Totals = new ReceiptTotals { Total = "0.00" }
+                    Totals = new ReceiptTotals { Total = 0.00m }
                 });
             })
             .Do(receipt =>

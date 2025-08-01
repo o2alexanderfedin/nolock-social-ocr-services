@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -7,6 +8,7 @@ namespace Nolock.social.CloudflareAI.JsonExtraction.Models;
 /// Type of document for OCR processing
 /// </summary>
 [JsonConverter(typeof(DocumentTypeJsonConverter))]
+[TypeConverter(typeof(DocumentTypeConverter))]
 public enum DocumentType
 {
     /// <summary>

@@ -4,15 +4,17 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Nolock.social.CloudflareAI.Interfaces;
+using Nolock.social.CloudflareAI.JsonExtraction.Interfaces;
 using Nolock.social.CloudflareAI.JsonExtraction.Models;
 using Nolock.social.CloudflareAI.JsonExtraction.SchemaGeneration;
+using Nolock.social.CloudflareAI.Models;
 
 namespace Nolock.social.CloudflareAI.JsonExtraction.Services;
 
 /// <summary>
 /// Service for OCR document extraction using Cloudflare AI
 /// </summary>
-public class OcrExtractionService
+public class OcrExtractionService : IOcrExtractionService
 {
     private readonly IWorkersAI _workersAI;
     private readonly ILogger<OcrExtractionService> _logger;
@@ -26,20 +28,32 @@ public class OcrExtractionService
     /// <summary>
     /// Extract structured data from OCR text based on document type
     /// </summary>
-    public async Task<object> ExtractDocumentAsync(DocumentType documentType, string ocrText, bool useSimpleSchema = false)
+    public async Task<object> ExtractDocumentAsync(DocumentType documentType, string ocrText, bool useSimpleSchema = true)
     {
-        return documentType switch
+        _logger.LogDebug("Extracting {DocumentType} using {Schema} schema", 
+            documentType, useSimpleSchema ? "simple" : "full");
+            
+        try
         {
-            DocumentType.Check => useSimpleSchema 
-                ? await ExtractAsync<SimpleCheck>(ocrText)
-                : await ExtractAsync<Check>(ocrText),
-                
-            DocumentType.Receipt => useSimpleSchema
-                ? await ExtractAsync<SimpleReceipt>(ocrText)
-                : await ExtractAsync<Receipt>(ocrText),
-                
-            _ => throw new NotSupportedException($"Document type {documentType} is not supported")
-        };
+            return documentType switch
+            {
+                DocumentType.Check => useSimpleSchema 
+                    ? await ExtractAsync<SimpleCheck>(ocrText)
+                    : await ExtractAsync<Check>(ocrText),
+                    
+                DocumentType.Receipt => useSimpleSchema
+                    ? await ExtractAsync<SimpleReceipt>(ocrText)
+                    : await ExtractAsync<Receipt>(ocrText),
+                    
+                _ => throw new NotSupportedException($"Document type {documentType} is not supported")
+            };
+        }
+        catch (Exception ex) when (useSimpleSchema == false)
+        {
+            // If full schema fails, fallback to simple schema
+            _logger.LogWarning("Full schema extraction failed, falling back to simple schema: {Error}", ex.Message);
+            return await ExtractDocumentAsync(documentType, ocrText, useSimpleSchema: true);
+        }
     }
     
     /// <summary>
@@ -123,18 +137,42 @@ public class OcrExtractionService
     }
     
     /// <summary>
-    /// Extract structured data for a specific type
+    /// Extract structured data for a specific type using Llama 3.3 70B model
     /// </summary>
+    /// <remarks>
+    /// Uses the Llama 3.3 70B Instruct FP8 Fast model for improved accuracy in JSON extraction
+    /// compared to smaller models, while maintaining reasonable performance with FP8 optimization.
+    /// </remarks>
     private async Task<T> ExtractAsync<T>(string ocrText) where T : class, new()
     {
         using var extractor = _workersAI.CreateJsonExtractor();
         
-        return await extractor
-            .ExtractFromType<T>(ocrText)
-            .Retry(2)
-            .Do(result => _logger.LogDebug("Extracted {Type} with confidence {Confidence:P}", 
-                typeof(T).Name, GetConfidence(result)))
-            .FirstAsync();
+        // Use more flexible extraction options for better success rate
+        var options = new ExtractionOptions
+        {
+            MaxTokens = 2000,
+            Temperature = 0.2, // Slightly higher for more creativity in interpretation
+            StrictValidation = false, // Allow partial matches
+            Examples = new List<string>()
+        };
+        
+        try 
+        {
+            var result = await extractor
+                .ExtractFromType<T>(ocrText, TextGenerationModels.Llama3_3_70B_Instruct_FP8_Fast, options)
+                .Retry(2)
+                .Do(extracted => _logger.LogDebug("Extracted {Type} with confidence {Confidence:P}", 
+                    typeof(T).Name, GetConfidence(extracted)))
+                .FirstAsync();
+                
+            _logger.LogInformation("Successfully extracted {Type} from OCR text", typeof(T).Name);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to extract {Type} from OCR text: {Error}", typeof(T).Name, ex.Message);
+            throw;
+        }
     }
     
     /// <summary>

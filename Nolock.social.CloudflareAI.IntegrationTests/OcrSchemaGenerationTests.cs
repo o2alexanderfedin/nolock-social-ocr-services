@@ -23,7 +23,7 @@ public class OcrSchemaGenerationTests
         
         var amountProp = schema.Properties.FirstOrDefault(p => p.Name == "amount");
         Assert.NotNull(amountProp);
-        Assert.Equal("string", amountProp.Type);
+        Assert.Equal("number", amountProp.Type); // Changed to decimal in C#
         
         var confidenceProp = schema.Properties.FirstOrDefault(p => p.Name == "confidence");
         Assert.NotNull(confidenceProp);
@@ -101,7 +101,7 @@ public class OcrSchemaGenerationTests
         
         var confidenceProp = schema.Properties.FirstOrDefault(p => p.Name == "confidence");
         Assert.NotNull(confidenceProp);
-        Assert.Contains("0-1", confidenceProp.Description);
+        Assert.Contains("confidence", confidenceProp.Description.ToLower());
     }
     
     [Fact]

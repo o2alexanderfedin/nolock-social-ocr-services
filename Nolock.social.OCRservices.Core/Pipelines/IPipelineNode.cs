@@ -1,4 +1,4 @@
-namespace Nolock.social.OCRservices.Pipelines;
+namespace Nolock.social.OCRservices.Core.Pipelines;
 
 public interface IPipelineNode<TIn, TOut>
 {

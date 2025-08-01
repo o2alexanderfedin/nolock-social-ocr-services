@@ -1,4 +1,4 @@
-using Nolock.social.OCRservices.Pipelines;
+using Nolock.social.OCRservices.Core.Pipelines;
 using System.Text;
 
 namespace Nolock.social.OCRservices.Tests.Pipelines;

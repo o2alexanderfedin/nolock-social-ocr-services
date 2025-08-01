@@ -182,15 +182,8 @@ Text: {text}";
         if (check.IsValidInput == false)
             return false;
             
-        if (string.IsNullOrEmpty(check.Amount))
+        if (!check.Amount.HasValue || check.Amount.Value <= 0)
             return false;
-            
-        // Validate amount format
-        if (!System.Text.RegularExpressions.Regex.IsMatch(check.Amount, @"^\d+(\.\d{1,2})?$"))
-        {
-            _logger.LogWarning("Invalid check amount format: {Amount}", check.Amount);
-            return false;
-        }
         
         return true;
     }
@@ -203,7 +196,7 @@ Text: {text}";
         if (string.IsNullOrEmpty(receipt.Merchant?.Name))
             return false;
             
-        if (string.IsNullOrEmpty(receipt.Totals?.Total))
+        if (receipt.Totals == null || receipt.Totals.Total <= 0)
             return false;
             
         return true;

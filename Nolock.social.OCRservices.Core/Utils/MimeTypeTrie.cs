@@ -1,6 +1,6 @@
-namespace Nolock.social.OCRservices.Utils;
+namespace Nolock.social.OCRservices.Core.Utils;
 
-public class MimeTypeTrie
+public sealed class MimeTypeTrie
 {
     private sealed class TrieNode
     {
