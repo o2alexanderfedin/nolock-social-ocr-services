@@ -36,6 +36,6 @@ public class ConfigurationTests : TestBase
         
         // Assert
         service.Should().NotBeNull();
-        service.Should().BeOfType<MistralOcrService>();
+        service.Should().BeOfType<MistralOcrApiService>();
     }
 }
