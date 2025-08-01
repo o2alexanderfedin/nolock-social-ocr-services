@@ -82,8 +82,7 @@ public class ImageTransformationWithExternalUrlsTests : TestBase
         // Act - transform URL to data URL and process with OCR
         var dataUrl = await _transformer.TransformAsync(imageUrl);
         var ocrResult = await Fixture.MistralOcrService.ProcessImageDataItemAsync(
-            (new Uri(dataUrl), "image/png"), 
-            "Extract all text from this receipt, including items, prices, and total");
+            (new Uri(dataUrl), "image/png"));
         
         // Assert
         ocrResult.Should().NotBeNull();
@@ -113,8 +112,7 @@ public class ImageTransformationWithExternalUrlsTests : TestBase
             .ToObservable()
             .ProcessImagesWithTransform(
                 _reactiveOcrService,
-                _transformer,
-                "Extract text from this image")
+                _transformer)
             .ToList();
 
         // Assert
@@ -232,8 +230,7 @@ public class ImageTransformationWithExternalUrlsTests : TestBase
             .ToObservable()
             .ProcessImagesWithTransformAndErrors(
                 _reactiveOcrService,
-                _transformer,
-                "Extract all visible text")
+                _transformer)
             .ToList();
 
         // Assert

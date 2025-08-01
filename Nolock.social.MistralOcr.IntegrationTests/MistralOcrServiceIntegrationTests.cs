@@ -20,8 +20,7 @@ public class MistralOcrServiceIntegrationTests : TestBase
         var dataUrl = GetTestImageDataUrl();
         
         var result = await Fixture.MistralOcrService.ProcessImageDataItemAsync(
-            (new Uri(dataUrl), "image/jpeg"), 
-            "Say exactly: CONNECTION_OK");
+            (new Uri(dataUrl), "image/jpeg"));
 
         result.Should().NotBeNull();
         result.Text.Should().NotBeNullOrWhiteSpace();
@@ -35,7 +34,7 @@ public class MistralOcrServiceIntegrationTests : TestBase
     public async Task ProcessImageAsync_WithInvalidUrl_ShouldThrowCorrectException(string? url, Type expectedExceptionType)
     {
         // Test OUR validation, not Mistral's
-        var act = async () => await Fixture.MistralOcrService.ProcessImageAsync(url!, "test");
+        var act = async () => await Fixture.MistralOcrService.ProcessImageAsync(url!);
         
         await act.Should().ThrowAsync<Exception>()
             .Where(e => e.GetType() == expectedExceptionType);
@@ -48,7 +47,7 @@ public class MistralOcrServiceIntegrationTests : TestBase
     public async Task ProcessImageDataUrlAsync_WithInvalidDataUrl_ShouldThrowException(string invalidDataUrl)
     {
         // Act
-        var act = async () => await Fixture.MistralOcrService.ProcessImageDataItemAsync((new Uri(invalidDataUrl), "image/jpeg"), "test");
+        var act = async () => await Fixture.MistralOcrService.ProcessImageDataItemAsync((new Uri(invalidDataUrl), "image/jpeg"));
         
         // Assert - Either ArgumentException from our validation or HttpRequestException from API
         await act.Should().ThrowAsync<Exception>()
@@ -60,8 +59,7 @@ public class MistralOcrServiceIntegrationTests : TestBase
     {
         var act = async () => await Fixture.MistralOcrService.ProcessImageBytesAsync(
             Array.Empty<byte>(), 
-            "image/png", 
-            "test");
+            "image/png");
         
         await act.Should().ThrowAsync<ArgumentException>()
             .WithMessage("*cannot be empty*");
@@ -74,8 +72,7 @@ public class MistralOcrServiceIntegrationTests : TestBase
         
         var act = async () => await Fixture.MistralOcrService.ProcessImageStreamAsync(
             stream, 
-            "image/png", 
-            "test");
+            "image/png");
         
         await act.Should().ThrowAsync<ArgumentException>()
             .WithMessage("*cannot be empty*");
@@ -89,8 +86,7 @@ public class MistralOcrServiceIntegrationTests : TestBase
     {
         var act = async () => await Fixture.MistralOcrService.ProcessImageBytesAsync(
             new byte[] { 1, 2, 3 }, 
-            mimeType!, 
-            "test");
+            mimeType!);
         
         await act.Should().ThrowAsync<ArgumentException>()
             .WithMessage("*mimeType*");

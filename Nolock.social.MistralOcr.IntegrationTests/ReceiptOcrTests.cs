@@ -13,22 +13,22 @@ public class ReceiptOcrTests : TestBase
     public static IEnumerable<object[]> ReceiptTestData =>
         new List<object[]>
         {
-            new object[] { 1, "Extract all text from this receipt including store name, items, prices, and total" },
-            new object[] { 2, "Extract all text from this receipt including store name, items, prices, and total" },
-            new object[] { 3, "Extract all text from this receipt including store name, items, prices, and total" },
-            new object[] { 4, "Extract all text from this receipt including store name, items, prices, and total" },
-            new object[] { 5, "Extract all text from this receipt including store name, items, prices, and total" }
+            new object[] { 1 },
+            new object[] { 2 },
+            new object[] { 3 },
+            new object[] { 4 },
+            new object[] { 5 }
         };
 
     [Theory]
     [MemberData(nameof(ReceiptTestData))]
-    public async Task ProcessReceipt_WithDataUrl_ShouldExtractText(int receiptNumber, string prompt)
+    public async Task ProcessReceipt_WithDataUrl_ShouldExtractText(int receiptNumber)
     {
         // Arrange
         var dataUrl = TestImageHelper.GetReceiptImageDataUrl(receiptNumber);
 
         // Act
-        var result = await Fixture.MistralOcrService.ProcessImageDataItemAsync((new Uri(dataUrl), "image/jpeg"), prompt);
+        var result = await Fixture.MistralOcrService.ProcessImageDataItemAsync((new Uri(dataUrl), "image/jpeg"));
 
         // Assert
         result.Should().NotBeNull();
@@ -49,13 +49,11 @@ public class ReceiptOcrTests : TestBase
     {
         // Arrange
         var imageBytes = TestImageHelper.GetReceiptImageBytes(receiptNumber);
-        const string prompt = "Extract all visible text from this receipt";
 
         // Act
         var result = await Fixture.MistralOcrService.ProcessImageBytesAsync(
             imageBytes, 
-            "image/jpeg", 
-            prompt);
+            "image/jpeg");
 
         // Assert
         result.Should().NotBeNull();
@@ -73,13 +71,11 @@ public class ReceiptOcrTests : TestBase
     {
         // Arrange
         using var stream = TestImageHelper.GetReceiptImageStream(receiptNumber);
-        const string prompt = "Read this receipt and extract all text";
 
         // Act
         var result = await Fixture.MistralOcrService.ProcessImageStreamAsync(
             stream, 
-            "image/jpeg", 
-            prompt);
+            "image/jpeg");
 
         // Assert
         result.Should().NotBeNull();
@@ -90,24 +86,23 @@ public class ReceiptOcrTests : TestBase
     public static IEnumerable<object[]> SpecificExtractionTestData =>
         new List<object[]>
         {
-            new object[] { 1, "Extract only the total amount from this receipt" },
-            new object[] { 2, "Extract only the date from this receipt" },
-            new object[] { 3, "Extract only the store name from this receipt" },
-            new object[] { 4, "List all items and their prices from this receipt" },
-            new object[] { 5, "Extract the payment method from this receipt" }
+            new object[] { 1 },
+            new object[] { 2 },
+            new object[] { 3 },
+            new object[] { 4 },
+            new object[] { 5 }
         };
 
     [Theory]
     [MemberData(nameof(SpecificExtractionTestData))]
     public async Task ProcessReceipt_WithSpecificExtraction_ShouldReturnSomeText(
-        int receiptNumber, 
-        string prompt)
+        int receiptNumber)
     {
         // Arrange
         var dataUrl = TestImageHelper.GetReceiptImageDataUrl(receiptNumber);
 
         // Act
-        var result = await Fixture.MistralOcrService.ProcessImageDataItemAsync((new Uri(dataUrl), "image/jpeg"), prompt);
+        var result = await Fixture.MistralOcrService.ProcessImageDataItemAsync((new Uri(dataUrl), "image/jpeg"));
 
         // Assert
         result.Should().NotBeNull();
@@ -117,18 +112,17 @@ public class ReceiptOcrTests : TestBase
     }
 
     [Theory]
-    [InlineData(1, "Provide the extracted text in JSON format with fields: store, date, items, total")]
-    [InlineData(2, "Extract receipt data and format as JSON with store name, items array, and total")]
-    [InlineData(3, "Parse this receipt and return structured JSON data")]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
     public async Task ProcessReceipt_WithStructuredOutput_ShouldReturnSomeText(
-        int receiptNumber, 
-        string prompt)
+        int receiptNumber)
     {
         // Arrange
         var dataUrl = TestImageHelper.GetReceiptImageDataUrl(receiptNumber);
 
         // Act
-        var result = await Fixture.MistralOcrService.ProcessImageDataItemAsync((new Uri(dataUrl), "image/jpeg"), prompt);
+        var result = await Fixture.MistralOcrService.ProcessImageDataItemAsync((new Uri(dataUrl), "image/jpeg"));
 
         // Assert
         result.Should().NotBeNull();
@@ -145,8 +139,7 @@ public class ReceiptOcrTests : TestBase
         var tasks = Enumerable
             .Range(1, 5)
             .Select(i => Fixture.MistralOcrService.ProcessImageDataItemAsync(
-                (new Uri(TestImageHelper.GetReceiptImageDataUrl(i)), "image/jpeg"),
-                $"Extract text from receipt {i}"
+                (new Uri(TestImageHelper.GetReceiptImageDataUrl(i)), "image/jpeg")
             ))
             .ToList();
 

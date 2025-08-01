@@ -60,7 +60,7 @@ public sealed class MistralOcrApiService : IMistralOcrService
         };
     }
 
-    public async Task<MistralOcrResult> ProcessImageAsync(string imageUrl, string? prompt = null, CancellationToken cancellationToken = default)
+    public async Task<MistralOcrResult> ProcessImageAsync(string imageUrl, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(imageUrl);
 
@@ -70,10 +70,10 @@ public sealed class MistralOcrApiService : IMistralOcrService
             Document = new ImageUrlChunk { ImageUrl = imageUrl }
         };
 
-        return await SendRequestAsync(request, prompt, cancellationToken);
+        return await SendRequestAsync(request, cancellationToken);
     }
 
-    public async Task<MistralOcrResult> ProcessImageDataItemAsync((Uri url, string mimeType) dataItem, string? prompt = null, CancellationToken cancellationToken = default)
+    public async Task<MistralOcrResult> ProcessImageDataItemAsync((Uri url, string mimeType) dataItem, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(dataItem.url);
         var dataUrl = dataItem.url.ToString();
@@ -89,10 +89,10 @@ public sealed class MistralOcrApiService : IMistralOcrService
             Document = new ImageUrlChunk { ImageUrl = dataUrl }
         };
 
-        return await SendRequestAsync(request, prompt, cancellationToken);
+        return await SendRequestAsync(request, cancellationToken);
     }
 
-    public async Task<MistralOcrResult> ProcessImageBytesAsync(byte[] imageBytes, string mimeType, string? prompt = null, CancellationToken cancellationToken = default)
+    public async Task<MistralOcrResult> ProcessImageBytesAsync(byte[] imageBytes, string mimeType, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(imageBytes);
         ArgumentException.ThrowIfNullOrWhiteSpace(mimeType);
@@ -105,10 +105,10 @@ public sealed class MistralOcrApiService : IMistralOcrService
         var base64 = Convert.ToBase64String(imageBytes);
         var dataUrl = $"data:{mimeType};base64,{base64}";
 
-        return await ProcessImageDataItemAsync((new Uri(dataUrl), mimeType), prompt, cancellationToken);
+        return await ProcessImageDataItemAsync((new Uri(dataUrl), mimeType), cancellationToken);
     }
 
-    public async Task<MistralOcrResult> ProcessImageStreamAsync(Stream imageStream, string mimeType, string? prompt = null, CancellationToken cancellationToken = default)
+    public async Task<MistralOcrResult> ProcessImageStreamAsync(Stream imageStream, string mimeType, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(imageStream);
         ArgumentException.ThrowIfNullOrWhiteSpace(mimeType);
@@ -122,10 +122,10 @@ public sealed class MistralOcrApiService : IMistralOcrService
         await imageStream.CopyToAsync(ms, cancellationToken);
         var bytes = ms.ToArray();
 
-        return await ProcessImageBytesAsync(bytes, mimeType, prompt, cancellationToken);
+        return await ProcessImageBytesAsync(bytes, mimeType, cancellationToken);
     }
 
-    private async Task<MistralOcrResult> SendRequestAsync(OcrRequest request, string? prompt, CancellationToken cancellationToken)
+    private async Task<MistralOcrResult> SendRequestAsync(OcrRequest request, CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
 
@@ -161,14 +161,8 @@ public sealed class MistralOcrApiService : IMistralOcrService
 
             stopwatch.Stop();
 
-            // Combine all page markdown content with prompt if provided
+            // Combine all page markdown content
             var extractedText = string.Join("\n\n", ocrResponse.Pages.Select(p => p.Markdown));
-
-            if (!string.IsNullOrWhiteSpace(prompt))
-            {
-                // If a prompt was provided, prepend it to help with context
-                extractedText = $"[User Prompt: {prompt}]\n\n{extractedText}";
-            }
 
             return new MistralOcrResult
             {

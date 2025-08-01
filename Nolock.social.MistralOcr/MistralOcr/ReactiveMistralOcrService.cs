@@ -40,12 +40,12 @@ public sealed class ReactiveMistralOcrService : IReactiveMistralOcrService, IDis
         _retryDelay = retryDelay ?? TimeSpan.FromSeconds(1);
     }
 
-    public IObservable<MistralOcrResult> ProcessImageDataItems(IObservable<(Uri url, string mimeType)> dataItems, string? prompt = null)
+    public IObservable<MistralOcrResult> ProcessImageDataItems(IObservable<(Uri url, string mimeType)> dataItems)
     {
         return dataItems
             .Where(dataItem => dataItem.url != null)
             .Select((dataItem, index) => Observable.Defer(() =>
-                Observable.FromAsync(ct => _ocrService.ProcessImageDataItemAsync(dataItem, prompt, ct))
+                Observable.FromAsync(ct => _ocrService.ProcessImageDataItemAsync(dataItem, ct))
                     .Do(_ => _logger.LogDebug("Successfully processed data URL {Index} with MIME type {MimeType}", index, dataItem.mimeType))
                     .Retry(_retryCount, _retryDelay, _scheduler)
                     .Catch<MistralOcrResult, Exception>(ex =>
@@ -60,13 +60,12 @@ public sealed class ReactiveMistralOcrService : IReactiveMistralOcrService, IDis
     }
 
     public IObservable<MistralOcrResult> ProcessImageBytes(
-        IObservable<(byte[] imageBytes, string mimeType)> images,
-        string? prompt = null)
+        IObservable<(byte[] imageBytes, string mimeType)> images)
     {
         return images
             .Where(img => img.imageBytes?.Length > 0 && !string.IsNullOrWhiteSpace(img.mimeType))
             .Select((img, index) => Observable.Defer(() =>
-                Observable.FromAsync(ct => _ocrService.ProcessImageBytesAsync(img.imageBytes, img.mimeType, prompt, ct))
+                Observable.FromAsync(ct => _ocrService.ProcessImageBytesAsync(img.imageBytes, img.mimeType, ct))
                     .Do(_ => _logger.LogDebug("Successfully processed image bytes {Index}", index))
                     .Retry(_retryCount, _retryDelay, _scheduler)
                     .Catch<MistralOcrResult, Exception>(ex =>
@@ -81,13 +80,12 @@ public sealed class ReactiveMistralOcrService : IReactiveMistralOcrService, IDis
     }
 
     public IObservable<MistralOcrResult> ProcessImageStreams(
-        IObservable<(Stream imageStream, string mimeType)> streams,
-        string? prompt = null)
+        IObservable<(Stream imageStream, string mimeType)> streams)
     {
         return streams
             .Where(s => s.imageStream != null && !string.IsNullOrWhiteSpace(s.mimeType))
             .Select((s, index) => Observable.Defer(() =>
-                Observable.FromAsync(ct => _ocrService.ProcessImageStreamAsync(s.imageStream, s.mimeType, prompt, ct))
+                Observable.FromAsync(ct => _ocrService.ProcessImageStreamAsync(s.imageStream, s.mimeType, ct))
                     .Do(_ => _logger.LogDebug("Successfully processed image stream {Index}", index))
                     .Retry(_retryCount, _retryDelay, _scheduler)
                     .Catch<MistralOcrResult, Exception>(ex =>

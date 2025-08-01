@@ -8,16 +8,16 @@ public interface IReactiveMistralOcrService
     /// <summary>
     /// Process a stream of image data URLs (as Uri objects) and return OCR results
     /// </summary>
-    IObservable<MistralOcrResult> ProcessImageDataItems(IObservable<(Uri url, string mimeType)> dataItems, string? prompt = null);
+    IObservable<MistralOcrResult> ProcessImageDataItems(IObservable<(Uri url, string mimeType)> dataItems);
 
     /// <summary>
     /// Process a stream of image bytes and return OCR results
     /// </summary>
-    IObservable<MistralOcrResult> ProcessImageBytes(IObservable<(byte[] imageBytes, string mimeType)> images, string? prompt = null);
+    IObservable<MistralOcrResult> ProcessImageBytes(IObservable<(byte[] imageBytes, string mimeType)> images);
 
     /// <summary>
     /// Process a stream of image streams and return OCR results
     /// </summary>
-    IObservable<MistralOcrResult> ProcessImageStreams(IObservable<(Stream imageStream, string mimeType)> streams, string? prompt = null);
+    IObservable<MistralOcrResult> ProcessImageStreams(IObservable<(Stream imageStream, string mimeType)> streams);
 
 }
