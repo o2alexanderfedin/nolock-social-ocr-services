@@ -1,0 +1,34 @@
+### Test async endpoint with check document type
+POST http://localhost:5000/ocr/async?documentType=check
+Content-Type: application/octet-stream
+
+< ./test-images/check-sample.png
+
+### Test async endpoint with receipt document type
+POST http://localhost:5000/ocr/async?documentType=receipt
+Content-Type: application/octet-stream
+
+< ./test-images/receipt-sample.png
+
+### Test async endpoint without document type (should return error)
+POST http://localhost:5000/ocr/async
+Content-Type: application/octet-stream
+
+< ./test-images/check-sample.png
+
+### Example response format:
+# {
+#   "documentType": "check",
+#   "ocrText": "First National Bank\nCheck #5432\nDate: 03/15/2024\n...",
+#   "extractedData": {
+#     "checkNumber": "5432",
+#     "amount": "245.67",
+#     "payee": "Electric Company",
+#     "date": "03/15/2024",
+#     "bank": "First National Bank",
+#     "memo": "March bill",
+#     "confidence": 0.85
+#   },
+#   "confidence": 0.85,
+#   "processingTimeMs": 1523
+# }
