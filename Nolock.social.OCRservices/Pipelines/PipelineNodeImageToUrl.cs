@@ -21,7 +21,7 @@ public class PipelineNodeImageToUrl : IPipelineNode<Stream, Uri>
 
     private readonly PipelineNodeRelay<Stream, Uri> _impl = PipelineNodeRelay.Create<Stream, Uri>(async stream =>
     {
-        using var ms = StreamManager.GetStream();
+        await using var ms = StreamManager.GetStream();
         await stream.CopyToAsync(ms);
         var bytes = ms.ToArray();
 
