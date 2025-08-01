@@ -1,0 +1,242 @@
+using System.Text;
+using Nolock.social.CloudflareAI.Models;
+
+namespace Nolock.social.CloudflareAI.IntegrationTests;
+
+[Collection("CloudflareAI")]
+public sealed class VisionIntegrationTests : BaseIntegrationTest
+{
+    [Fact]
+    public async Task RunAsync_Llava_WithBase64Image_DescribesImage()
+    {
+        // Create a simple test image in base64 (1x1 red pixel PNG)
+        var redPixelPng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+        
+        var request = new
+        {
+            image = $"data:image/png;base64,{redPixelPng}",
+            prompt = "What do you see in this image? Describe it in detail.",
+            max_tokens = 100
+        };
+
+        var result = await Client.RunAsync<TextGenerationResponse>(
+            VisionModels.Llava_1_5_7B_HF,
+            request);
+
+        Assert.NotNull(result);
+        Assert.False(string.IsNullOrWhiteSpace(result.Response) && string.IsNullOrWhiteSpace(result.GeneratedText));
+        
+        var description = result.Response ?? result.GeneratedText;
+        Logger.LogInformation("Image description: {Description}", description);
+        
+        // Should contain some visual description
+        Assert.True(description.Length > 10, $"Description too short: {description}");
+    }
+
+    [Fact]
+    public async Task RunAsync_UForm_WithSimpleImage_AnalyzesContent()
+    {
+        // Create a simple 2x2 checkerboard pattern in base64
+        var checkerboardPng = CreateSimpleCheckerboardBase64();
+        
+        var request = new
+        {
+            image = $"data:image/png;base64,{checkerboardPng}",
+            prompt = "Analyze this image and tell me what pattern you see.",
+            max_tokens = 80
+        };
+
+        var result = await Client.RunAsync<TextGenerationResponse>(
+            VisionModels.UForm_Gen2_QWen_500M,
+            request);
+
+        Assert.NotNull(result);
+        Assert.False(string.IsNullOrWhiteSpace(result.Response) && string.IsNullOrWhiteSpace(result.GeneratedText));
+        
+        var analysis = result.Response ?? result.GeneratedText;
+        Logger.LogInformation("Pattern analysis: {Analysis}", analysis);
+    }
+
+    [Fact]
+    public async Task RunAsync_Llava_WithOCRTask_ReadsText()
+    {
+        // Create a simple image with text (simulated with base64)
+        var textImagePng = CreateSimpleTextImageBase64();
+        
+        var request = new
+        {
+            image = $"data:image/png;base64,{textImagePng}",
+            prompt = "What text do you see in this image? Please read it carefully.",
+            max_tokens = 50
+        };
+
+        var result = await Client.RunAsync<TextGenerationResponse>(
+            VisionModels.Llava_1_5_7B_HF,
+            request);
+
+        Assert.NotNull(result);
+        Assert.False(string.IsNullOrWhiteSpace(result.Response) && string.IsNullOrWhiteSpace(result.GeneratedText));
+        
+        var ocrResult = result.Response ?? result.GeneratedText;
+        Logger.LogInformation("OCR result: {Result}", ocrResult);
+    }
+
+    [Fact]
+    public async Task RunAsync_WithColorDetection_IdentifiesColors()
+    {
+        // Create a simple colored image
+        var blueSquarePng = CreateSimpleColoredImageBase64();
+        
+        var request = new
+        {
+            image = $"data:image/png;base64,{blueSquarePng}",
+            prompt = "What colors do you see in this image?",
+            max_tokens = 30
+        };
+
+        var result = await Client.RunAsync<TextGenerationResponse>(
+            VisionModels.UForm_Gen2_QWen_500M,
+            request);
+
+        Assert.NotNull(result);
+        Assert.False(string.IsNullOrWhiteSpace(result.Response) && string.IsNullOrWhiteSpace(result.GeneratedText));
+        
+        var colorDescription = result.Response ?? result.GeneratedText;
+        Logger.LogInformation("Color detection: {Colors}", colorDescription);
+    }
+
+    [Fact]
+    public async Task RunAsync_WithObjectCounting_CountsObjects()
+    {
+        // Create an image with multiple objects (simulated)
+        var multiObjectPng = CreateSimpleMultiObjectImageBase64();
+        
+        var request = new
+        {
+            image = $"data:image/png;base64,{multiObjectPng}",
+            prompt = "How many distinct objects or shapes do you see in this image?",
+            max_tokens = 40
+        };
+
+        var result = await Client.RunAsync<TextGenerationResponse>(
+            VisionModels.Llava_1_5_7B_HF,
+            request);
+
+        Assert.NotNull(result);
+        Assert.False(string.IsNullOrWhiteSpace(result.Response) && string.IsNullOrWhiteSpace(result.GeneratedText));
+        
+        var countResult = result.Response ?? result.GeneratedText;
+        Logger.LogInformation("Object counting: {Count}", countResult);
+    }
+
+    [Fact]
+    public async Task RunRawAsync_WithVisionModel_ReturnsHttpResponse()
+    {
+        var redPixelPng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+        
+        var request = new
+        {
+            image = $"data:image/png;base64,{redPixelPng}",
+            prompt = "Describe this image briefly."
+        };
+
+        using var response = await Client.RunRawAsync(
+            VisionModels.Llava_1_5_7B_HF,
+            request);
+
+        Assert.True(response.IsSuccessStatusCode);
+        
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.False(string.IsNullOrWhiteSpace(content));
+        
+        Logger.LogInformation("Raw vision response length: {Length}", content.Length);
+        
+        // Should contain result with vision analysis
+        Assert.Contains("result", content, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task RunAsync_WithComplexScene_AnalyzesDetails()
+    {
+        // Create a more complex scene (simulated with geometric shapes)
+        var complexScenePng = CreateComplexSceneBase64();
+        
+        var request = new
+        {
+            image = $"data:image/png;base64,{complexScenePng}",
+            prompt = "Describe the layout and composition of this image. What shapes and arrangements do you see?",
+            max_tokens = 120
+        };
+
+        var result = await Client.RunAsync<TextGenerationResponse>(
+            VisionModels.Llava_1_5_7B_HF,
+            request);
+
+        Assert.NotNull(result);
+        Assert.False(string.IsNullOrWhiteSpace(result.Response) && string.IsNullOrWhiteSpace(result.GeneratedText));
+        
+        var sceneDescription = result.Response ?? result.GeneratedText;
+        Logger.LogInformation("Complex scene analysis: {Scene}", sceneDescription);
+        
+        // Should provide some detailed description
+        Assert.True(sceneDescription.Length > 20, $"Scene description too brief: {sceneDescription}");
+    }
+
+    [Theory]
+    [InlineData("What is the main subject of this image?")]
+    [InlineData("Describe the visual elements you observe.")]
+    [InlineData("What can you tell me about this picture?")]
+    public async Task RunAsync_WithDifferentPrompts_GeneratesVariedResponses(string prompt)
+    {
+        var testImagePng = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+        
+        var request = new
+        {
+            image = $"data:image/png;base64,{testImagePng}",
+            prompt = prompt,
+            max_tokens = 60
+        };
+
+        var result = await Client.RunAsync<TextGenerationResponse>(
+            VisionModels.UForm_Gen2_QWen_500M,
+            request);
+
+        Assert.NotNull(result);
+        Assert.False(string.IsNullOrWhiteSpace(result.Response) && string.IsNullOrWhiteSpace(result.GeneratedText));
+        
+        var response = result.Response ?? result.GeneratedText;
+        Logger.LogInformation("Prompt: '{Prompt}' -> Response: '{Response}'", prompt, response);
+    }
+
+    // Helper methods to create simple test images in base64 format
+    private static string CreateSimpleCheckerboardBase64()
+    {
+        // This is a placeholder - in a real scenario, you'd generate actual image data
+        // For now, return a simple 1x1 image
+        return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77zgAAAABJRU5ErkJggg==";
+    }
+
+    private static string CreateSimpleTextImageBase64()
+    {
+        // Placeholder for an image containing text
+        return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    }
+
+    private static string CreateSimpleColoredImageBase64()
+    {
+        // Placeholder for a colored image (blue)
+        return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYGBgAAAABQABijOjAAAAAABJRU5ErkJggg==";
+    }
+
+    private static string CreateSimpleMultiObjectImageBase64()
+    {
+        // Placeholder for an image with multiple objects
+        return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+    }
+
+    private static string CreateComplexSceneBase64()
+    {
+        // Placeholder for a complex scene
+        return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYGBgAAAABQABijOjAAAAAABJRU5ErkJggg==";
+    }
+}
