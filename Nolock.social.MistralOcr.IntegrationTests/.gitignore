@@ -1,0 +1,2 @@
+# Ignore local test configuration with API keys
+appsettings.test.local.json

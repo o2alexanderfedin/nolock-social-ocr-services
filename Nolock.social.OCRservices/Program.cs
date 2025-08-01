@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Nolock.social.MistralOcr;
 
 namespace Nolock.social.OCRservices;
 
@@ -13,26 +14,51 @@ public static class Program
             options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
         });
 
+        // Add Mistral OCR service
+        builder.Services.AddMistralOcr(options =>
+        {
+            options.ApiKey = builder.Configuration["MistralOcr:ApiKey"] ?? throw new InvalidOperationException("MistralOcr:ApiKey is required");
+            options.Model = builder.Configuration["MistralOcr:Model"] ?? "mistral-ocr-latest";
+        });
+
         var app = builder.Build();
 
-        var sampleTodos = new Todo[]
-        {
-            new(1, "Walk the dog"),
-            new(2, "Do the dishes", DateOnly.FromDateTime(DateTime.Now)),
-            new(3, "Do the laundry", DateOnly.FromDateTime(DateTime.Now.AddDays(1))),
-            new(4, "Clean the bathroom"),
-            new(5, "Clean the car", DateOnly.FromDateTime(DateTime.Now.AddDays(2)))
-        };
-
         var ocrApi = app.MapGroup("/ocr");
-        ocrApi.MapGet("/", () => sampleTodos);
         ocrApi.MapPut("/sync", (string type) => Results.Ok(type));
+        
+        // Mistral OCR endpoint
+        ocrApi.MapPost("/mistral", async (IMistralOcrService ocrService, MistralOcrEndpointRequest request) =>
+        {
+            try
+            {
+                MistralOcrResult result;
+                
+                if (!string.IsNullOrEmpty(request.ImageUrl))
+                {
+                    result = await ocrService.ProcessImageAsync(request.ImageUrl, request.Prompt);
+                }
+                else if (!string.IsNullOrEmpty(request.ImageDataUrl))
+                {
+                    result = await ocrService.ProcessImageDataUrlAsync(request.ImageDataUrl, request.Prompt);
+                }
+                else
+                {
+                    return Results.BadRequest("Either ImageUrl or ImageDataUrl must be provided");
+                }
+                
+                return Results.Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem(ex.Message);
+            }
+        });
 
         app.Run();
     }
 }
 
-public record Todo(int Id, string? Title, DateOnly? DueBy = null, bool IsComplete = false);
+public record Todo;
 
 [JsonSerializable(typeof(Todo[]))]
 internal sealed partial class AppJsonSerializerContext : JsonSerializerContext
