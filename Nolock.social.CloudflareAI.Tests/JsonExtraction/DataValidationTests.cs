@@ -28,13 +28,13 @@ public class DataValidationTests : JsonModelTestBase
     #region Decimal Precision Validation Tests
 
     [Theory]
-    [InlineData("123.45", 123.45)]
-    [InlineData("0.01", 0.01)]
-    [InlineData("0.001", 0.001)]
-    [InlineData("0.0001", 0.0001)]
-    [InlineData("999999.9999", 999999.9999)]
-    [InlineData("1.2345678901234567890123456789", 1.2345678901234567890123456789)] // Maximum decimal precision
-    public void DecimalPrecision_ValidValues_DeserializeCorrectly(string jsonValue, decimal expectedValue)
+    [InlineData("123.45")]
+    [InlineData("0.01")]
+    [InlineData("0.001")]
+    [InlineData("0.0001")]
+    [InlineData("999999.9999")]
+    [InlineData("1.2345678901234567890123456789")] // Maximum decimal precision (29 significant digits)
+    public void DecimalPrecision_ValidValues_DeserializeCorrectly(string jsonValue)
     {
         // Arrange
         var json = $$"""
@@ -51,14 +51,16 @@ public class DataValidationTests : JsonModelTestBase
         // Assert
         Assert.NotNull(receipt);
         Assert.NotNull(receipt.Totals);
+        // Parse the expected value from string to avoid compile-time decimal literal truncation
+        var expectedValue = decimal.Parse(jsonValue, CultureInfo.InvariantCulture);
         Assert.Equal(expectedValue, receipt.Totals.Total);
     }
 
     [Theory]
-    [InlineData("12.345", 12.345)]
-    [InlineData("0.12345", 0.12345)]
-    [InlineData("1.999999", 1.999999)]
-    public void DecimalPrecision_HighPrecisionValues_PreservePrecision(string jsonValue, decimal expectedValue)
+    [InlineData("12.345")]
+    [InlineData("0.12345")]
+    [InlineData("1.999999")]
+    public void DecimalPrecision_HighPrecisionValues_PreservePrecision(string jsonValue)
     {
         // Arrange
         var json = $$"""
@@ -80,6 +82,8 @@ public class DataValidationTests : JsonModelTestBase
         Assert.NotNull(receipt);
         Assert.NotNull(receipt.Items);
         Assert.Single(receipt.Items);
+        // Parse the expected value from string to avoid compile-time decimal literal truncation
+        var expectedValue = decimal.Parse(jsonValue, CultureInfo.InvariantCulture);
         Assert.Equal(expectedValue, receipt.Items[0].UnitPrice);
         Assert.Equal(expectedValue, receipt.Items[0].TotalPrice);
     }
@@ -89,7 +93,13 @@ public class DataValidationTests : JsonModelTestBase
     {
         // Arrange - Test near decimal.MaxValue
         var largeValue = 79228162514264337593543950335m; // Close to decimal.MaxValue
-        var json = CreateTestJson("total", largeValue.ToString(CultureInfo.InvariantCulture));
+        var json = $$"""
+        {
+            "totals": {
+                "total": {{largeValue.ToString(CultureInfo.InvariantCulture)}}
+            }
+        }
+        """;
 
         // Act
         var receipt = JsonSerializer.Deserialize<Receipt>(json, JsonOptions);
@@ -105,7 +115,13 @@ public class DataValidationTests : JsonModelTestBase
     {
         // Arrange - Test very small positive number
         var smallValue = 0.0000000000000000000000000001m;
-        var json = CreateTestJson("total", smallValue.ToString("F28", CultureInfo.InvariantCulture));
+        var json = $$"""
+        {
+            "totals": {
+                "total": {{smallValue.ToString("F28", CultureInfo.InvariantCulture)}}
+            }
+        }
+        """;
 
         // Act
         var receipt = JsonSerializer.Deserialize<Receipt>(json, JsonOptions);
