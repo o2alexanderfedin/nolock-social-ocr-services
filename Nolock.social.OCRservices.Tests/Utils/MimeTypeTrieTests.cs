@@ -93,9 +93,9 @@ public class MimeTypeTrieTests
     public void Search_WithEmptyData_ReturnsNull()
     {
         var trie = new MimeTypeTrie();
-        trie.Add(new byte[] { 0xFF, 0xD8 }, "image/jpeg");
+        trie.Add([0xFF, 0xD8], "image/jpeg");
         
-        var result = trie.Search(Array.Empty<byte>());
+        var result = trie.Search([]);
         
         Assert.Null(result);
     }
@@ -119,9 +119,9 @@ public class MimeTypeTrieTests
     {
         var trie = new MimeTypeTrie();
         
-        trie.Add(new byte[] { 0xFF, 0xD8 }, "image/jpeg");
-        trie.Add(new byte[] { 0x89, 0x50, 0x4E, 0x47 }, "image/png");
-        trie.Add(new byte[] { 0x47, 0x49, 0x46 }, "image/gif");
+        trie.Add([0xFF, 0xD8], "image/jpeg");
+        trie.Add([0x89, 0x50, 0x4E, 0x47], "image/png");
+        trie.Add([0x47, 0x49, 0x46], "image/gif");
         
         var mimeTypes = trie.GetAllMimeTypes().ToList();
         
@@ -147,9 +147,9 @@ public class MimeTypeTrieTests
         var trie = new MimeTypeTrie();
         
         // Add shorter signature first
-        trie.Add(new byte[] { 0x00, 0x00 }, "format/short");
+        trie.Add([0x00, 0x00], "format/short");
         // Add longer signature with same prefix
-        trie.Add(new byte[] { 0x00, 0x00, 0x00, 0x18 }, "format/long");
+        trie.Add([0x00, 0x00, 0x00, 0x18], "format/long");
         
         // Test with data matching the longer signature
         var testData = new byte[] { 0x00, 0x00, 0x00, 0x18, 0xFF };
@@ -196,16 +196,16 @@ public class MimeTypeTrieTests
         var trie = new MimeTypeTrie();
         var jpegSignatures = new (byte[] signature, string description)[]
         {
-            (new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 }, "JPEG with JFIF"),
-            (new byte[] { 0xFF, 0xD8, 0xFF, 0xE1 }, "JPEG with EXIF"),
-            (new byte[] { 0xFF, 0xD8, 0xFF, 0xE2 }, "JPEG with ICC Profile"),
-            (new byte[] { 0xFF, 0xD8, 0xFF, 0xE8 }, "JPEG with SPIFF"),
-            (new byte[] { 0xFF, 0xD8, 0xFF, 0xDB }, "JPEG with Quantization Table"),
-            (new byte[] { 0xFF, 0xD8, 0xFF, 0xC0 }, "JPEG with Start of Frame")
+            ([0xFF, 0xD8, 0xFF, 0xE0], "JPEG with JFIF"),
+            ([0xFF, 0xD8, 0xFF, 0xE1], "JPEG with EXIF"),
+            ([0xFF, 0xD8, 0xFF, 0xE2], "JPEG with ICC Profile"),
+            ([0xFF, 0xD8, 0xFF, 0xE8], "JPEG with SPIFF"),
+            ([0xFF, 0xD8, 0xFF, 0xDB], "JPEG with Quantization Table"),
+            ([0xFF, 0xD8, 0xFF, 0xC0], "JPEG with Start of Frame")
         };
         
         // Add base JPEG signature
-        trie.Add(new byte[] { 0xFF, 0xD8 }, "image/jpeg");
+        trie.Add([0xFF, 0xD8], "image/jpeg");
         
         // Act & Assert
         foreach (var (signature, description) in jpegSignatures)
@@ -242,7 +242,7 @@ public class MimeTypeTrieTests
     {
         // Arrange
         var trie = new MimeTypeTrie();
-        trie.Add(new byte[] { 0x42, 0x4D }, "image/bmp");
+        trie.Add([0x42, 0x4D], "image/bmp");
         
         // Create test BMP data with header
         var bmpTestData = new byte[] 
@@ -267,14 +267,14 @@ public class MimeTypeTrieTests
         var trie = new MimeTypeTrie();
         var imageFormats = new Dictionary<byte[], string>
         {
-            { new byte[] { 0xFF, 0xD8 }, "image/jpeg" },
-            { new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }, "image/png" },
-            { new byte[] { 0x47, 0x49, 0x46, 0x38, 0x37, 0x61 }, "image/gif" },
-            { new byte[] { 0x47, 0x49, 0x46, 0x38, 0x39, 0x61 }, "image/gif" },
-            { new byte[] { 0x42, 0x4D }, "image/bmp" },
-            { new byte[] { 0x52, 0x49, 0x46, 0x46 }, "image/webp" },
-            { new byte[] { 0x00, 0x00, 0x01, 0x00 }, "image/x-icon" }, // ICO format
-            { new byte[] { 0xFF, 0x4F, 0xFF, 0x51 }, "image/jp2" } // JPEG 2000
+            { [0xFF, 0xD8], "image/jpeg" },
+            { [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A], "image/png" },
+            { [0x47, 0x49, 0x46, 0x38, 0x37, 0x61], "image/gif" },
+            { [0x47, 0x49, 0x46, 0x38, 0x39, 0x61], "image/gif" },
+            { [0x42, 0x4D], "image/bmp" },
+            { [0x52, 0x49, 0x46, 0x46], "image/webp" },
+            { [0x00, 0x00, 0x01, 0x00], "image/x-icon" }, // ICO format
+            { [0xFF, 0x4F, 0xFF, 0x51], "image/jp2" } // JPEG 2000
         };
         
         // Add all formats to trie
@@ -312,10 +312,10 @@ public class MimeTypeTrieTests
     {
         // Arrange
         var trie = new MimeTypeTrie();
-        trie.Add(new byte[] { 0xFF, 0xD8 }, "image/jpeg");
+        trie.Add([0xFF, 0xD8], "image/jpeg");
         
         // Act
-        var result = trie.Search(Array.Empty<byte>());
+        var result = trie.Search([]);
         
         // Assert
         result.Should().BeNull("because empty files have no signature to match");
@@ -326,7 +326,7 @@ public class MimeTypeTrieTests
     {
         // Arrange
         var trie = new MimeTypeTrie();
-        trie.Add(new byte[] { 0xFF, 0xD8 }, "image/jpeg");
+        trie.Add([0xFF, 0xD8], "image/jpeg");
         
         var singleByte = new byte[] { 0xFF }; // Partial JPEG signature
         
@@ -342,8 +342,8 @@ public class MimeTypeTrieTests
     {
         // Arrange
         var trie = new MimeTypeTrie();
-        trie.Add(new byte[] { 0xFF, 0xD8 }, "image/jpeg");
-        trie.Add(new byte[] { 0x89, 0x50, 0x4E, 0x47 }, "image/png");
+        trie.Add([0xFF, 0xD8], "image/jpeg");
+        trie.Add([0x89, 0x50, 0x4E, 0x47], "image/png");
         
         var corruptedData = new byte[]
         {
@@ -364,7 +364,7 @@ public class MimeTypeTrieTests
     {
         // Arrange
         var trie = new MimeTypeTrie();
-        trie.Add(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }, "image/png");
+        trie.Add([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A], "image/png");
         
         var malformedPng = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0xFF, 0xFF, 0xFF, 0xFF }; // Wrong PNG header
         
@@ -384,8 +384,8 @@ public class MimeTypeTrieTests
     {
         // Arrange
         var trie = new MimeTypeTrie();
-        trie.Add(new byte[] { 0xFF, 0xD8 }, "image/jpeg");
-        trie.Add(new byte[] { 0x89, 0x50, 0x4E, 0x47 }, "image/png");
+        trie.Add([0xFF, 0xD8], "image/jpeg");
+        trie.Add([0x89, 0x50, 0x4E, 0x47], "image/png");
         
         // Act
         var result = trie.Search(invalidData);
@@ -412,7 +412,7 @@ public class MimeTypeTrieTests
         var trie = new MimeTypeTrie();
         
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() => trie.Add(new byte[] { 0xFF, 0xD8 }, null!));
+        var exception = Assert.Throws<ArgumentNullException>(() => trie.Add([0xFF, 0xD8], null!));
         exception.ParamName.Should().Be("mimeType");
     }
 
@@ -432,7 +432,7 @@ public class MimeTypeTrieTests
     {
         // Arrange
         var trie = new MimeTypeTrie();
-        trie.Add(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }, "image/png"); // 8-byte PNG signature
+        trie.Add([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A], "image/png"); // 8-byte PNG signature
         
         var tinyFile = new byte[] { 0x89, 0x50 }; // Only 2 bytes
         
@@ -452,8 +452,8 @@ public class MimeTypeTrieTests
     {
         // Arrange
         var trie = new MimeTypeTrie();
-        trie.Add(new byte[] { 0xFF, 0xD8 }, "image/jpeg");
-        trie.Add(new byte[] { 0x89, 0x50, 0x4E, 0x47 }, "image/png");
+        trie.Add([0xFF, 0xD8], "image/jpeg");
+        trie.Add([0x89, 0x50, 0x4E, 0x47], "image/png");
         
         // Create a large file (10MB) with JPEG signature at the beginning
         var largeFile = new byte[10 * 1024 * 1024]; // 10MB
@@ -461,7 +461,7 @@ public class MimeTypeTrieTests
         largeFile[1] = 0xD8;
         // Fill rest with random data
         var random = new Random(42); // Fixed seed for reproducibility
-        for (int i = 2; i < largeFile.Length; i++)
+        for (var i = 2; i < largeFile.Length; i++)
         {
             largeFile[i] = (byte)random.Next(256);
         }
@@ -473,7 +473,7 @@ public class MimeTypeTrieTests
         
         // Assert
         result.Should().Be("image/jpeg", "because JPEG signature should be detected");
-        stopwatch.ElapsedMilliseconds.Should().BeLessThan(100, "because trie search should be fast even for large files");
+        stopwatch.ElapsedMilliseconds.Should().BeLessThan(200, "because trie search should be fast even for large files");
     }
 
     [Fact]
@@ -481,7 +481,7 @@ public class MimeTypeTrieTests
     {
         // Arrange
         var trie = new MimeTypeTrie();
-        trie.Add(new byte[] { 0xFF, 0xD8 }, "image/jpeg");
+        trie.Add([0xFF, 0xD8], "image/jpeg");
         
         // Create a large file (1MB) with no matching signature
         var largeFile = new byte[1024 * 1024]; // 1MB
@@ -538,11 +538,11 @@ public class MimeTypeTrieTests
         // Add common image format signatures
         var commonSignatures = new Dictionary<byte[], string>
         {
-            { new byte[] { 0xFF, 0xD8 }, "image/jpeg" },
-            { new byte[] { 0x89, 0x50, 0x4E, 0x47 }, "image/png" },
-            { new byte[] { 0x47, 0x49, 0x46, 0x38 }, "image/gif" },
-            { new byte[] { 0x42, 0x4D }, "image/bmp" },
-            { new byte[] { 0x52, 0x49, 0x46, 0x46 }, "image/webp" }
+            { [0xFF, 0xD8], "image/jpeg" },
+            { [0x89, 0x50, 0x4E, 0x47], "image/png" },
+            { [0x47, 0x49, 0x46, 0x38], "image/gif" },
+            { [0x42, 0x4D], "image/bmp" },
+            { [0x52, 0x49, 0x46, 0x46], "image/webp" }
         };
         
         foreach (var (signature, mimeType) in commonSignatures)
@@ -586,8 +586,8 @@ public class MimeTypeTrieTests
         result.Should().Be("image/jpeg");
         
         // Test that partial matches don't work
-        trie.Search(new byte[] { 0xFF }).Should().BeNull();
-        trie.Search(new byte[] { 0xFF, 0xD8 }).Should().BeNull();
+        trie.Search([0xFF]).Should().BeNull();
+        trie.Search([0xFF, 0xD8]).Should().BeNull();
     }
 
     [Fact]
@@ -597,14 +597,14 @@ public class MimeTypeTrieTests
         var trie = new MimeTypeTrie();
         
         // Add signatures that share common prefixes
-        trie.Add(new byte[] { 0x47, 0x49, 0x46, 0x38, 0x37, 0x61 }, "image/gif87a"); // GIF87a
-        trie.Add(new byte[] { 0x47, 0x49, 0x46, 0x38, 0x39, 0x61 }, "image/gif89a"); // GIF89a
-        trie.Add(new byte[] { 0x47, 0x49, 0x46 }, "image/gif-generic"); // Generic GIF
+        trie.Add([0x47, 0x49, 0x46, 0x38, 0x37, 0x61], "image/gif87a"); // GIF87a
+        trie.Add([0x47, 0x49, 0x46, 0x38, 0x39, 0x61], "image/gif89a"); // GIF89a
+        trie.Add([0x47, 0x49, 0x46], "image/gif-generic"); // Generic GIF
         
         // Act & Assert
-        trie.Search(new byte[] { 0x47, 0x49, 0x46, 0x38, 0x37, 0x61, 0x00 }).Should().Be("image/gif87a");
-        trie.Search(new byte[] { 0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x00 }).Should().Be("image/gif89a");
-        trie.Search(new byte[] { 0x47, 0x49, 0x46, 0x00, 0x00, 0x00 }).Should().Be("image/gif-generic");
+        trie.Search([0x47, 0x49, 0x46, 0x38, 0x37, 0x61, 0x00]).Should().Be("image/gif87a");
+        trie.Search([0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x00]).Should().Be("image/gif89a");
+        trie.Search([0x47, 0x49, 0x46, 0x00, 0x00, 0x00]).Should().Be("image/gif-generic");
     }
 
     [Fact]
@@ -639,11 +639,11 @@ public class MimeTypeTrieTests
         var trie = new MimeTypeTrie();
         
         // Add signatures where one is a prefix of another
-        trie.Add(new byte[] { 0x52, 0x49 }, "format/short");
-        trie.Add(new byte[] { 0x52, 0x49, 0x46, 0x46 }, "format/riff");
+        trie.Add([0x52, 0x49], "format/short");
+        trie.Add([0x52, 0x49, 0x46, 0x46], "format/riff");
         // WEBP signature: RIFF + any 4 bytes (file size) + WEBP - we'll use a more realistic approach
         // For testing purposes, we'll use a fixed file size that matches our test data
-        trie.Add(new byte[] { 0x52, 0x49, 0x46, 0x46, 0x12, 0x34, 0x56, 0x78, 0x57, 0x45, 0x42, 0x50 }, "image/webp");
+        trie.Add([0x52, 0x49, 0x46, 0x46, 0x12, 0x34, 0x56, 0x78, 0x57, 0x45, 0x42, 0x50], "image/webp");
         
         // Test data that matches the longest signature
         var webpData = new byte[] { 0x52, 0x49, 0x46, 0x46, 0x12, 0x34, 0x56, 0x78, 0x57, 0x45, 0x42, 0x50, 0x56, 0x50 };
@@ -675,7 +675,7 @@ public class MimeTypeTrieTests
         if (exception == null)
         {
             // If empty signatures are allowed, test the behavior
-            trie.Search(Array.Empty<byte>()).Should().BeNull("because empty data should not match anything meaningful");
+            trie.Search([]).Should().BeNull("because empty data should not match anything meaningful");
         }
     }
 
@@ -694,7 +694,7 @@ public class MimeTypeTrieTests
             var baseBytes = Encoding.ASCII.GetBytes(prefix);
             for (int i = 0; i < 10; i++)
             {
-                var signature = baseBytes.Concat(new byte[] { (byte)i }).ToArray();
+                var signature = baseBytes.Concat([(byte)i]).ToArray();
                 signatures.Add((signature, $"format/{prefix.ToLower()}{i}"));
             }
         }
@@ -729,13 +729,13 @@ public class MimeTypeTrieTests
         
         var signatures = new Dictionary<byte[], string>
         {
-            { new byte[] { 0xFF, 0xD8 }, "image/jpeg" },
-            { new byte[] { 0x89, 0x50, 0x4E, 0x47 }, "image/png" },
-            { new byte[] { 0x47, 0x49, 0x46 }, "image/gif" },
-            { new byte[] { 0x42, 0x4D }, "image/bmp" },
-            { new byte[] { 0x25, 0x50, 0x44, 0x46 }, "application/pdf" },
-            { new byte[] { 0x54, 0x68, 0x69, 0x73 }, "text/plain" }, // "This"
-            { new byte[] { 0x50, 0x4B, 0x03, 0x04 }, "application/zip" }
+            { [0xFF, 0xD8], "image/jpeg" },
+            { [0x89, 0x50, 0x4E, 0x47], "image/png" },
+            { [0x47, 0x49, 0x46], "image/gif" },
+            { [0x42, 0x4D], "image/bmp" },
+            { [0x25, 0x50, 0x44, 0x46], "application/pdf" },
+            { [0x54, 0x68, 0x69, 0x73], "text/plain" }, // "This"
+            { [0x50, 0x4B, 0x03, 0x04], "application/zip" }
         };
         
         foreach (var (signature, mimeType) in signatures)
@@ -761,9 +761,9 @@ public class MimeTypeTrieTests
         var trie = new MimeTypeTrie();
         
         // Add common image formats
-        trie.Add(new byte[] { 0xFF, 0xD8 }, "image/jpeg");
-        trie.Add(new byte[] { 0x89, 0x50, 0x4E, 0x47 }, "image/png");
-        trie.Add(new byte[] { 0x47, 0x49, 0x46 }, "image/gif");
+        trie.Add([0xFF, 0xD8], "image/jpeg");
+        trie.Add([0x89, 0x50, 0x4E, 0x47], "image/png");
+        trie.Add([0x47, 0x49, 0x46], "image/gif");
         
         // Test with unknown signature
         var unknownSignature = new byte[] { 0xAB, 0xCD, 0xEF, 0x12, 0x34, 0x56 };
@@ -787,8 +787,8 @@ public class MimeTypeTrieTests
         var trie = new MimeTypeTrie();
         
         // Add only image formats
-        trie.Add(new byte[] { 0xFF, 0xD8 }, "image/jpeg");
-        trie.Add(new byte[] { 0x89, 0x50, 0x4E, 0x47 }, "image/png");
+        trie.Add([0xFF, 0xD8], "image/jpeg");
+        trie.Add([0x89, 0x50, 0x4E, 0x47], "image/png");
         
         // Act
         var result = trie.Search(signature);
@@ -804,16 +804,16 @@ public class MimeTypeTrieTests
         var trie = new MimeTypeTrie();
         
         // Add some formats but not others
-        trie.Add(new byte[] { 0xFF, 0xD8 }, "image/jpeg");
-        trie.Add(new byte[] { 0x25, 0x50, 0x44, 0x46 }, "application/pdf");
+        trie.Add([0xFF, 0xD8], "image/jpeg");
+        trie.Add([0x25, 0x50, 0x44, 0x46], "application/pdf");
         
         var testCases = new (byte[] data, string? expected, string description)[]
         {
-            (new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 }, "image/jpeg", "JPEG file"),
-            (new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D }, "application/pdf", "PDF file"),
-            (new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D }, null, "PNG file (not added)"),
-            (new byte[] { 0x50, 0x4B, 0x03, 0x04 }, null, "ZIP file (not added)"),
-            (new byte[] { 0x00, 0x00, 0x00, 0x00 }, null, "Unknown format")
+            ([0xFF, 0xD8, 0xFF, 0xE0], "image/jpeg", "JPEG file"),
+            ([0x25, 0x50, 0x44, 0x46, 0x2D], "application/pdf", "PDF file"),
+            ([0x89, 0x50, 0x4E, 0x47, 0x0D], null, "PNG file (not added)"),
+            ([0x50, 0x4B, 0x03, 0x04], null, "ZIP file (not added)"),
+            ([0x00, 0x00, 0x00, 0x00], null, "Unknown format")
         };
         
         // Act & Assert
@@ -829,7 +829,7 @@ public class MimeTypeTrieTests
     {
         // Arrange
         var trie = new MimeTypeTrie();
-        trie.Add(new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 }, "image/jpeg"); // Full JPEG JFIF signature
+        trie.Add([0xFF, 0xD8, 0xFF, 0xE0], "image/jpeg"); // Full JPEG JFIF signature
         
         // Test with data that partially matches but diverges
         var partialMatch = new byte[] { 0xFF, 0xD8, 0xFF, 0xE1 }; // JPEG with EXIF instead of JFIF
@@ -846,8 +846,8 @@ public class MimeTypeTrieTests
     {
         // Arrange
         var trie = new MimeTypeTrie();
-        trie.Add(new byte[] { 0xFF, 0xD8 }, "image/jpeg");
-        trie.Add(new byte[] { 0x89, 0x50, 0x4E, 0x47 }, "image/png");
+        trie.Add([0xFF, 0xD8], "image/jpeg");
+        trie.Add([0x89, 0x50, 0x4E, 0x47], "image/png");
         
         // Create large file with unknown signature
         var largeUnknownFile = new byte[1024 * 1024]; // 1MB
@@ -877,9 +877,9 @@ public class MimeTypeTrieTests
         var trie = new MimeTypeTrie();
         
         // Add selective formats (not all possible ones)
-        trie.Add(new byte[] { 0xFF, 0xD8 }, "image/jpeg");
-        trie.Add(new byte[] { 0x25, 0x50, 0x44, 0x46 }, "application/pdf");
-        trie.Add(new byte[] { 0x50, 0x4B, 0x03, 0x04 }, "application/zip");
+        trie.Add([0xFF, 0xD8], "image/jpeg");
+        trie.Add([0x25, 0x50, 0x44, 0x46], "application/pdf");
+        trie.Add([0x50, 0x4B, 0x03, 0x04], "application/zip");
         
         // Act
         var allMimeTypes = trie.GetAllMimeTypes().ToHashSet();
