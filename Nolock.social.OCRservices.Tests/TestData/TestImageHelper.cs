@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace Nolock.social.OCRservices.Tests.TestData;
 
 public static class TestImageHelper
@@ -9,11 +7,11 @@ public static class TestImageHelper
     /// </summary>
     public static byte[] GetReceiptImage()
     {
-        try 
+        try
         {
             return TestImageResources.GetReceiptImage();
         }
-        catch 
+        catch
         {
             // Fallback to synthetic image if embedded resource not available
             return TestImageResources.CreateTextReceiptImage();
@@ -25,11 +23,11 @@ public static class TestImageHelper
     /// </summary>
     public static byte[] GetCheckImage()
     {
-        try 
+        try
         {
             return TestImageResources.GetCheckImage();
         }
-        catch 
+        catch
         {
             // Fallback to synthetic image if embedded resource not available
             return TestImageResources.CreateTextReceiptImage();
@@ -134,5 +132,13 @@ public static class TestImageHelper
         var imageBytes = GetReceiptImageBytes(index);
         var base64 = Convert.ToBase64String(imageBytes);
         return $"data:image/jpeg;base64,{base64}";
+    }
+
+    /// <summary>
+    /// Generates a test image stream
+    /// </summary>
+    public static Stream GenerateTestImage()
+    {
+        return GetReceiptImageStream();
     }
 }

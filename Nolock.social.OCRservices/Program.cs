@@ -3,6 +3,7 @@ using Nolock.social.MistralOcr;
 using Nolock.social.MistralOcr.Extensions;
 using Nolock.social.OCRservices;
 using Nolock.social.OCRservices.Services;
+using Nolock.social.OCRservices.Extensions;
 using Nolock.social.CloudflareAI;
 using Nolock.social.CloudflareAI.JsonExtraction.Interfaces;
 using Nolock.social.CloudflareAI.JsonExtraction.Services;
@@ -28,8 +29,8 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddMistralOcr(options =>
 {
     // Try environment variable first, then configuration
-    options.ApiKey = Environment.GetEnvironmentVariable("MISTRAL_API_KEY") 
-        ?? builder.Configuration["MistralOcr:ApiKey"] 
+    options.ApiKey = Environment.GetEnvironmentVariable("MISTRAL_API_KEY")
+        ?? builder.Configuration["MistralOcr:ApiKey"]
         ?? throw new InvalidOperationException("MISTRAL_API_KEY environment variable is required");
     options.Model = builder.Configuration["MistralOcr:Model"] ?? "mistral-ocr-latest";
 });
@@ -46,11 +47,11 @@ builder.Services.AddReactiveMistralOcr(options =>
 builder.Services.AddWorkersAI(options =>
 {
     // Try environment variables first, then configuration
-    options.AccountId = Environment.GetEnvironmentVariable("CLOUDFLARE_ACCOUNT_ID") 
-        ?? builder.Configuration["CloudflareAI:AccountId"] 
+    options.AccountId = Environment.GetEnvironmentVariable("CLOUDFLARE_ACCOUNT_ID")
+        ?? builder.Configuration["CloudflareAI:AccountId"]
         ?? throw new InvalidOperationException("CLOUDFLARE_ACCOUNT_ID environment variable is required");
-    options.ApiToken = Environment.GetEnvironmentVariable("CLOUDFLARE_API_TOKEN") 
-        ?? builder.Configuration["CloudflareAI:ApiToken"] 
+    options.ApiToken = Environment.GetEnvironmentVariable("CLOUDFLARE_API_TOKEN")
+        ?? builder.Configuration["CloudflareAI:ApiToken"]
         ?? throw new InvalidOperationException("CLOUDFLARE_API_TOKEN environment variable is required");
 });
 
@@ -59,6 +60,9 @@ builder.Services.AddScoped<IOcrExtractionService, OcrExtractionService>();
 
 // Add simplified OCR request handler
 builder.Services.AddScoped<IOcrRequestHandler, OcrRequestHandler>();
+
+// Add OCR to Model pipeline
+builder.Services.AddOcrToModelPipeline();
 
 var app = builder.Build();
 
