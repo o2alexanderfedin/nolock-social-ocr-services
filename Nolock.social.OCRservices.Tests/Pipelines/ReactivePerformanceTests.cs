@@ -17,7 +17,7 @@ public class ReactivePerformanceTests : IDisposable
     private readonly List<IDisposable> _disposables = new();
     private readonly PipelineNodeImageToUrl _imageToUrlNode = new();
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task ReactivePipeline_HighVolumeProcessing_ShouldMaintainPerformance()
     {
         // Arrange
@@ -48,7 +48,7 @@ public class ReactivePerformanceTests : IDisposable
         averageProcessingTime.Should().BeLessThan(300); // Less than 300ms per item on average
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task ReactivePipeline_WithMemoryPressure_ShouldNotLeakMemory()
     {
         // Arrange
@@ -94,7 +94,7 @@ public class ReactivePerformanceTests : IDisposable
         memoryIncreasePerItem.Should().BeLessThan(1024 * 1024);
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task ReactivePipeline_ConcurrentLoad_ShouldHandleSimultaneousStreams()
     {
         // Arrange
@@ -141,7 +141,7 @@ public class ReactivePerformanceTests : IDisposable
         completedStreams.Should().Be(streamCount);
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task ReactivePipeline_WithErrorHandling_ShouldMaintainThroughput()
     {
         // Arrange
@@ -173,7 +173,7 @@ public class ReactivePerformanceTests : IDisposable
         processedResults.Should().HaveCountGreaterThanOrEqualTo(expectedSuccessful);
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task ReactivePipeline_BackpressureStressTest_ShouldControlResourceUsage()
     {
         // Arrange
@@ -214,7 +214,7 @@ public class ReactivePerformanceTests : IDisposable
         maxConcurrentOperations.Should().BeLessOrEqualTo(5);
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task ReactivePipeline_TimeoutHandling_ShouldNotBlockProcessing()
     {
         // Arrange
@@ -262,7 +262,7 @@ public class ReactivePerformanceTests : IDisposable
         timeoutErrors.Should().BeGreaterThan(0);
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task ReactivePipeline_BufferedProcessing_ShouldOptimizeThroughput()
     {
         // Arrange

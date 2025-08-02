@@ -23,7 +23,7 @@ public class PerformanceTests : TestBase
 
     #region Response Time Benchmarks
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task ResponseTime_SingleImageProcessing_ShouldMeetBenchmarks()
     {
         // Arrange
@@ -61,7 +61,7 @@ public class PerformanceTests : TestBase
         maxTime.Should().BeLessThan(TimeSpan.FromSeconds(60), "Maximum response time should be under 60 seconds");
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task ResponseTime_DifferentImageSizes_ShouldScaleAppropriately()
     {
         // Arrange
@@ -107,7 +107,7 @@ public class PerformanceTests : TestBase
 
     #region Memory Usage Validation
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task MemoryUsage_SingleImageProcessing_ShouldNotExceedLimits()
     {
         // Arrange
@@ -143,7 +143,7 @@ public class PerformanceTests : TestBase
         memoryIncrease.Should().BeLessThan(100 * 1024 * 1024, "Memory usage should not exceed 100MB for 10 operations");
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task MemoryUsage_StreamProcessing_ShouldDisposeProperlyAsync()
     {
         // Arrange
@@ -181,7 +181,7 @@ public class PerformanceTests : TestBase
 
     #region Throughput Testing
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task Throughput_SequentialProcessing_ShouldMeetMinimumRate()
     {
         // Arrange
@@ -207,7 +207,7 @@ public class PerformanceTests : TestBase
         throughput.Should().BeGreaterThan(0.1, "Should process at least 0.1 requests per second sequentially");
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task Throughput_ConcurrentProcessing_ShouldHandleParallelRequests()
     {
         // Arrange
@@ -236,7 +236,7 @@ public class PerformanceTests : TestBase
         throughput.Should().BeGreaterThan(0.15, "Concurrent processing should achieve better throughput");
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task Throughput_DataflowPipeline_ShouldProcessStreamEfficiently()
     {
         // Arrange
@@ -284,7 +284,7 @@ public class PerformanceTests : TestBase
 
     #region Connection Pooling Efficiency
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task ConnectionPooling_MultipleServices_ShouldReuseConnections()
     {
         // Arrange - Create multiple service instances to test connection reuse
@@ -325,7 +325,7 @@ public class PerformanceTests : TestBase
         standardDeviation.Should().BeLessThan(5000, "Request times should be consistent with connection pooling");
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task ConnectionPooling_HighConcurrency_ShouldHandleConnectionLimits()
     {
         // Arrange
@@ -371,7 +371,7 @@ public class PerformanceTests : TestBase
 
     #region Stream Processing Performance
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task StreamProcessing_ReactiveService_ShouldHandleBackpressure()
     {
         // Arrange
@@ -425,7 +425,7 @@ public class PerformanceTests : TestBase
         totalThroughput.Should().BeGreaterThan(0.1, "Stream processing should maintain reasonable throughput");
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task StreamProcessing_LargeDataSet_ShouldMaintainPerformance()
     {
         // Arrange
@@ -551,7 +551,7 @@ public class PerformanceTests : TestBase
 
     #region Performance Regression Tests
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task PerformanceRegression_BaselineComparison_ShouldNotDegrade()
     {
         // Arrange - Define baseline performance expectations

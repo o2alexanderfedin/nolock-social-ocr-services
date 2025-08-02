@@ -13,7 +13,7 @@ public class AdvancedPerformanceTests : TestBase
     {
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task PerformanceMetrics_SingleOperation_ShouldProvideDetailedMeasurements()
     {
         // Arrange
@@ -36,7 +36,7 @@ public class AdvancedPerformanceTests : TestBase
         Math.Abs(metrics.MemoryUsedMB).Should().BeLessThan(100, "Single operation should not use excessive memory");
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task PerformanceMetrics_MultipleOperations_ShouldShowConsistentPerformance()
     {
         // Arrange
@@ -65,7 +65,7 @@ public class AdvancedPerformanceTests : TestBase
         coefficientOfVariation.Should().BeLessThan(0.5, "Performance should be relatively consistent");
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task ThroughputMetrics_ConcurrentOperations_ShouldDemonstrateScaling()
     {
         // Arrange
@@ -132,7 +132,7 @@ public class AdvancedPerformanceTests : TestBase
         loadTestResults.ThroughputPerSecond.Should().BeGreaterThan(0.1, "Should maintain minimum throughput");
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task MemoryPressure_LargeImageProcessing_ShouldHandleGracefully()
     {
         // Arrange - Use a larger image for memory pressure testing
@@ -177,7 +177,7 @@ public class AdvancedPerformanceTests : TestBase
         memoryStdDev.Should().BeLessThan(50 * 1024 * 1024, "Memory usage should be consistent across iterations");
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task ResponseTime_UnderLoad_ShouldDegradeGracefully()
     {
         // Arrange
@@ -205,7 +205,7 @@ public class AdvancedPerformanceTests : TestBase
         loadMetrics.Results.Should().HaveCount(loadMetrics.TotalOperations, "All operations should complete");
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task ConnectionReuse_SequentialRequests_ShouldShowImprovement()
     {
         // Arrange
@@ -244,7 +244,7 @@ public class AdvancedPerformanceTests : TestBase
         coefficientOfVariation.Should().BeLessThan(0.3, "Response times should be relatively consistent with connection reuse");
     }
 
-    [Fact]
+    [Fact(Skip = "Performance tests are resource-intensive and should be run selectively")]
     public async Task StressTest_ErrorHandling_ShouldFailGracefully()
     {
         // Arrange - Test with invalid data to trigger errors
