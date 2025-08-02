@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Nolock.social.CloudflareAI.JsonExtraction.SchemaGeneration;
 
 namespace Nolock.social.CloudflareAI.Models;
 
@@ -85,7 +86,12 @@ public sealed record TextGenerationResponse
     public string Response { get; init; } = string.Empty;
 
     [JsonPropertyName("generated_text")]
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global
     public string GeneratedText { get; init; } = string.Empty;
+    
+    [JsonIgnoreInSchema]
+    // ReSharper disable once UnusedMember.Global
+    public string FinalResponse => string.IsNullOrEmpty(Response) ? GeneratedText : Response; 
 }
 
 /// <summary>
