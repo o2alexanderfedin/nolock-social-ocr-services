@@ -163,8 +163,15 @@ public class OcrExtractionService : IOcrExtractionService
                 .Retry(2)
                 .Do(extracted => _logger.LogDebug("Extracted {Type} with confidence {Confidence:P}", 
                     typeof(T).Name, GetConfidence(extracted)))
-                .FirstAsync();
+                .FirstOrDefaultAsync();
                 
+            if (result == null)
+            {
+                _logger.LogWarning("No valid {Type} data could be extracted from OCR text", typeof(T).Name);
+                // Return a default instance with minimal data
+                result = new T();
+            }
+            
             _logger.LogInformation("Successfully extracted {Type} from OCR text", typeof(T).Name);
             return result;
         }
