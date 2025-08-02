@@ -20,6 +20,10 @@
     <PackageReference Include="WireMock.Net" Version="1.8.17" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <!-- Performance testing packages -->
+    <PackageReference Include="NBomber" Version="6.0.0" />
+    <PackageReference Include="NBomber.Http" Version="6.0.0" />
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,6 +39,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="appsettings.test.local.json" Condition="Exists('appsettings.test.local.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.performance.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

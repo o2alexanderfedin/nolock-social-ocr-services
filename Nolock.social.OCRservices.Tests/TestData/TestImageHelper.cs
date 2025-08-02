@@ -97,4 +97,42 @@ public static class TestImageHelper
                 
                 John Doe";
     }
+
+    /// <summary>
+    /// Gets a receipt image as a stream for testing
+    /// </summary>
+    public static Stream GetReceiptImageStream()
+    {
+        var imageBytes = GetReceiptImage();
+        return new MemoryStream(imageBytes);
+    }
+
+    /// <summary>
+    /// Gets a check image as a stream for testing
+    /// </summary>
+    public static Stream GetCheckImageStream()
+    {
+        var imageBytes = GetCheckImage();
+        return new MemoryStream(imageBytes);
+    }
+
+    /// <summary>
+    /// Gets receipt image bytes by index for testing multiple images
+    /// </summary>
+    public static byte[] GetReceiptImageBytes(int index)
+    {
+        // For testing, we can return the same image or create variations
+        // For simplicity, return the same image for all indices
+        return GetReceiptImage();
+    }
+
+    /// <summary>
+    /// Gets receipt image as data URL for testing
+    /// </summary>
+    public static string GetReceiptImageDataUrl(int index)
+    {
+        var imageBytes = GetReceiptImageBytes(index);
+        var base64 = Convert.ToBase64String(imageBytes);
+        return $"data:image/jpeg;base64,{base64}";
+    }
 }

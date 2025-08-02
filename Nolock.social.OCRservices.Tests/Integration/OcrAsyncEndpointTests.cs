@@ -18,12 +18,12 @@ using Xunit;
 
 namespace Nolock.social.OCRservices.Tests.Integration;
 
-public class OcrAsyncEndpointTests : IClassFixture<WebApplicationFactory<Program>>
+public class OcrAsyncEndpointTests : IClassFixture<TestWebApplicationFactory<Program>>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly TestWebApplicationFactory<Program> _factory;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public OcrAsyncEndpointTests(WebApplicationFactory<Program> factory)
+    public OcrAsyncEndpointTests(TestWebApplicationFactory<Program> factory)
     {
         _factory = factory;
         _jsonOptions = new JsonSerializerOptions
