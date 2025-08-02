@@ -81,6 +81,7 @@ public sealed record Message
 public sealed record TextGenerationResponse
 {
     [JsonPropertyName("response")]
+    [JsonConverter(typeof(FlexibleResponseConverter))]
     public string Response { get; init; } = string.Empty;
 
     [JsonPropertyName("generated_text")]
