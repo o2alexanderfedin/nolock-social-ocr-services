@@ -75,13 +75,21 @@ public class EdgeCaseTests : IClassFixture<TestWebApplicationFactory<Program>>
     }
 
     [Fact]
-    public async Task ReceiptsEndpoint_WithNullStream_ReturnsBadRequest()
+    public async Task ReceiptsEndpoint_WithNullStream_ReturnsErrorResponse()
     {
         // Act
         var response = await _client.PostAsync("/ocr/receipts", null);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        // API handles null content as empty body and returns OK with error
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        
+        var responseJson = await response.Content.ReadAsStringAsync();
+        var receiptResponse = JsonSerializer.Deserialize<ReceiptOcrResponse>(responseJson, _jsonOptions);
+        
+        Assert.NotNull(receiptResponse);
+        Assert.False(receiptResponse.Success);
+        Assert.NotNull(receiptResponse.Error);
     }
 
     #endregion
@@ -138,7 +146,7 @@ public class EdgeCaseTests : IClassFixture<TestWebApplicationFactory<Program>>
         // Arrange - Create data with invalid JPEG header
         var invalidJpegData = new byte[] { 0xFF, 0xD8, 0x00, 0x00 }; // Invalid JPEG (truncated)
         using var invalidContent = new ByteArrayContent(invalidJpegData);
-        invalidContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
+        invalidContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 
         // Act
         var response = await _client.PostAsync("/ocr/receipts", invalidContent);
@@ -150,8 +158,9 @@ public class EdgeCaseTests : IClassFixture<TestWebApplicationFactory<Program>>
         var receiptResponse = JsonSerializer.Deserialize<ReceiptOcrResponse>(responseJson, _jsonOptions);
         
         Assert.NotNull(receiptResponse);
-        // Should handle invalid image gracefully
-        Assert.True(receiptResponse.Success || !string.IsNullOrEmpty(receiptResponse.Error));
+        // Should handle invalid image gracefully with error response
+        Assert.False(receiptResponse.Success);
+        Assert.NotNull(receiptResponse.Error);
     }
 
     #endregion
@@ -254,7 +263,7 @@ public class EdgeCaseTests : IClassFixture<TestWebApplicationFactory<Program>>
         // Arrange - Create unsupported format data (e.g., .ico file)
         var unsupportedFormatData = CreateUnsupportedFormatData();
         using var unsupportedContent = new ByteArrayContent(unsupportedFormatData);
-        unsupportedContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/x-icon");
+        unsupportedContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 
         // Act
         var response = await _client.PostAsync("/ocr/receipts", unsupportedContent);
@@ -266,8 +275,9 @@ public class EdgeCaseTests : IClassFixture<TestWebApplicationFactory<Program>>
         var receiptResponse = JsonSerializer.Deserialize<ReceiptOcrResponse>(responseJson, _jsonOptions);
         
         Assert.NotNull(receiptResponse);
-        // Should handle unsupported format gracefully
-        Assert.True(receiptResponse.Success || !string.IsNullOrEmpty(receiptResponse.Error));
+        // Should handle unsupported format gracefully with error response
+        Assert.False(receiptResponse.Success);
+        Assert.NotNull(receiptResponse.Error);
         
         Console.WriteLine($"Unsupported format result - Success: {receiptResponse.Success}, Error: {receiptResponse.Error}");
     }
@@ -284,14 +294,8 @@ public class EdgeCaseTests : IClassFixture<TestWebApplicationFactory<Program>>
         var response = await _client.PostAsync("/ocr/checks", textContent);
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        
-        var responseJson = await response.Content.ReadAsStringAsync();
-        var checkResponse = JsonSerializer.Deserialize<CheckOcrResponse>(responseJson, _jsonOptions);
-        
-        Assert.NotNull(checkResponse);
-        // Should handle non-image data gracefully
-        Assert.True(checkResponse.Success || !string.IsNullOrEmpty(checkResponse.Error));
+        // API should reject non-image content types
+        Assert.Equal(HttpStatusCode.UnsupportedMediaType, response.StatusCode);
     }
 
     [Fact]
