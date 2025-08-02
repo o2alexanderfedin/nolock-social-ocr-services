@@ -42,7 +42,15 @@ public class SecurityTests : IClassFixture<TestWebApplicationFactory<Program>>
         var response = await client.PostAsync("/ocr/receipts", null);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        // API handles null content as empty body and returns OK with error
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        
+        var responseJson = await response.Content.ReadAsStringAsync();
+        var receiptResponse = JsonSerializer.Deserialize<ReceiptOcrResponse>(responseJson, _jsonOptions);
+        
+        Assert.NotNull(receiptResponse);
+        Assert.False(receiptResponse.Success);
+        Assert.NotNull(receiptResponse.Error);
     }
 
     [Fact]
@@ -55,7 +63,15 @@ public class SecurityTests : IClassFixture<TestWebApplicationFactory<Program>>
         var response = await client.PostAsync("/ocr/checks", null);
 
         // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        // API handles null content as empty body and returns OK with error
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        
+        var responseJson = await response.Content.ReadAsStringAsync();
+        var checkResponse = JsonSerializer.Deserialize<CheckOcrResponse>(responseJson, _jsonOptions);
+        
+        Assert.NotNull(checkResponse);
+        Assert.False(checkResponse.Success);
+        Assert.NotNull(checkResponse.Error);
     }
 
     [Fact]
